@@ -2,7 +2,7 @@ import UserForm from "./UserForm";
 import HomePage from "./Home/HomePage";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-const AppRouter: React.FC = () => {
+const AppRouter = () => {
   return (
     <Router>
       <Routes>

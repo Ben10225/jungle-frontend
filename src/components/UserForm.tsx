@@ -1,6 +1,7 @@
-import { useState } from "react";
 import axios from "axios";
+import { useState } from "react";
 import { ENDPOINT } from "../App";
+import { useNavigate } from "react-router-dom";
 
 const UserForm = () => {
   interface formObject {
@@ -26,6 +27,8 @@ const UserForm = () => {
     { name: "sign-up-password", id: 3 },
   ];
 
+  const navigate = useNavigate();
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     s: string
@@ -49,7 +52,7 @@ const UserForm = () => {
     try {
       const response = await axios.post(`${ENDPOINT}/input`, formData);
       console.log(response.data);
-      window.location.href = "/";
+      navigate("/");
     } catch (error) {
       console.error("Error:", error);
     }
