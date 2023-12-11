@@ -89,7 +89,7 @@ const UserForm = () => {
         }
         setTimeout(() => {
           navigate("/");
-        }, 1500);
+        }, 1000);
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
