@@ -96,6 +96,14 @@ body {
 }
 
 .days li.isToday::before {
+  background-color: #ccc;
+}
+
+.days .day.clicked {
+  color: #fff !important;
+}
+
+.days li.clicked::before {
   background-color: #9b59b6;
 }
 
