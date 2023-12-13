@@ -1,6 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 
-const Calender = () => {
+type CalendarProps = {
+  onTodayDataChange: (data: string) => void;
+  // children: ReactNode;
+};
+
+const Calender: React.FC<CalendarProps> = ({ onTodayDataChange }) => {
   interface dateObject {
     currYear: number;
     currMonth: number;
@@ -21,7 +26,7 @@ const Calender = () => {
   const prevIcon = useRef<HTMLSpanElement>(null);
   const nextIcon = useRef<HTMLSpanElement>(null);
 
-  const [clientPage, setClientPage] = useState(0);
+  const [clientPage, setClientPage] = useState<number>(0);
   const [clickDay, setClickDay] = useState({
     today: -1,
     thisMonth: -1,
@@ -183,7 +188,7 @@ const Calender = () => {
     i: number,
     item: dayElement
   ) => {
-    // const targetButton = e.target as HTMLButtonElement;
+    const targetButton = e.target as HTMLButtonElement;
     if (item.active) {
       const today = clickDay.today;
       if (clickDay.thisMonth === -1 && clickDay.nextMonth === -1 && i === today)
@@ -221,6 +226,10 @@ const Calender = () => {
         updateState(clickDay.thisMonth);
       }
 
+      const dataFromChild = `${date.currYear} ${date.currMonth + 1} ${
+        targetButton.textContent
+      }`;
+      onTodayDataChange(dataFromChild);
       // console.log(
       //   `${date.currYear} ${date.currMonth + 1} ${targetButton.textContent}`
       // );
@@ -230,6 +239,7 @@ const Calender = () => {
   useEffect(() => {
     renderCalendar();
 
+    onTodayDataChange(`${date.currYear} ${date.currMonth} ${date.currDate}`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -239,29 +249,12 @@ const Calender = () => {
       currMonth: nowDate.getMonth(),
       currDate: nowDate.getDate(),
     });
-    // renderCalender();
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nowDate]);
 
   useEffect(() => {
     renderCalendar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientPage]);
-
-  // useEffect(() => {
-  //   // console.log(ct);
-  //   // // setDaysElement({ days: [] });
-  //   // const newItems = [...daysElement.days];
-  //   // // 使用 splice 方法移除元素
-  //   // newItems.splice(0, 1);
-  //   // // 更新状态
-  //   // setDaysElement({ days: newItems });
-  //   // // console.log("data change", ct);
-  //   console.log("State updated:", daysElement);
-  // }, [daysElement]);
-
-  // renderCalender();
 
   return (
     <div className="calendar">
