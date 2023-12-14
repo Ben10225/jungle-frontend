@@ -1,5 +1,5 @@
 import axios from "axios";
-import Calendar from "./Calendar";
+import Calendar from "../Calendar/Calendar";
 import TimeBlock from "./TimeBlock";
 import { useState, useEffect } from "react";
 import { ENDPOINT } from "../../App";

@@ -20,7 +20,6 @@ const TimeBlock = ({ title, sureTimedata }: TimeBlockProps): ReactElement => {
     },
   ]);
 
-  // const [error, setError] = useState<string | null>(null);
   const [firstLoad, setFirstLoad] = useState<boolean>(true);
   const [selectIndex, setSelectIndex] = useState<number>(-1);
   const [today, setToday] = useState<string[]>([]);

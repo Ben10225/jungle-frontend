@@ -1,8 +1,12 @@
-interface Data {
-  yymm: string;
-  date: string;
-  sureTimeArray: boolean[];
-}
+import { useState, useEffect } from "react";
+import PrevNextBtn from "./PrevNextBtn";
+import { handleDayClick, showClickDate } from "./ReserveRule";
+import {
+  dayElement,
+  daysElementState,
+  clickDay,
+  dateObject,
+} from "./ReserveRule";
 
 interface CalendarProps {
   onTodayDataChange: (data: string) => void;
@@ -10,43 +14,22 @@ interface CalendarProps {
   sureTimedata: { yymm: string; date: string; sureTimeArray: boolean[] }[];
 }
 
-import { useState, useRef, useEffect } from "react";
-
 const Calender: React.FC<CalendarProps> = ({
   onTodayDataChange,
   onPageChange,
   sureTimedata,
 }) => {
-  interface dateObject {
-    currYear: number;
-    currMonth: number;
-    currDate: number;
-  }
-
-  interface dayElement {
-    day: number;
-    active: boolean;
-    isToday: boolean;
-    clicked: boolean;
-  }
-
-  interface DaysElementState {
-    days: dayElement[];
-  }
-
-  const prevIcon = useRef<HTMLSpanElement>(null);
-  const nextIcon = useRef<HTMLSpanElement>(null);
-
-  const [preventDateClick, serPreventDateClick] = useState<boolean>(false);
+  const [firstLoad, setFirstLoad] = useState<boolean>(true);
+  const [todayDataChange, setTodayDataChange] = useState<string>("");
+  const [preventDateClick, setPreventDateClick] = useState<boolean>(false);
   const [clientPage, setClientPage] = useState<number>(0);
-  const [clickDay, setClickDay] = useState({
+  const [nowDate, setNowDate] = useState<Date>(new Date());
+  const [clickDay, setClickDay] = useState<clickDay>({
     today: -1,
     thisMonth: -1,
     nextMonth: -1,
   });
-  const [nowDate, setNowDate] = useState<Date>(new Date());
 
-  // let nowDate = new Date();
   const months = [
     "Jan.",
     "Feb.",
@@ -62,7 +45,7 @@ const Calender: React.FC<CalendarProps> = ({
     "Dec.",
   ];
 
-  const [daysElement, setDaysElement] = useState<DaysElementState>({
+  const [daysElement, setDaysElement] = useState<daysElementState>({
     days: [],
   });
 
@@ -73,7 +56,7 @@ const Calender: React.FC<CalendarProps> = ({
   });
 
   const renderCalendar = () => {
-    serPreventDateClick(false);
+    setPreventDateClick(false);
     daysElement.days = [];
 
     const firstDateOfMonth = new Date(
@@ -155,126 +138,44 @@ const Calender: React.FC<CalendarProps> = ({
     setDaysElement({ days: tmp });
   };
 
-  const handlePrevNextIcon = (e: React.MouseEvent<HTMLSpanElement>) => {
-    const targetButton = e.target as HTMLButtonElement;
-    if (
-      (clientPage === 0 && targetButton.id === "prev") ||
-      (clientPage === 1 && targetButton.id === "next")
-    )
-      return;
+  const handlePrevNextBtnClick = (data: number) => {
+    setClientPage(data);
+  };
 
-    let page = clientPage;
-    // setDaysElement({ days: [] });
-
-    if (targetButton.id === "prev") {
-      date.currMonth = date.currMonth - 1;
-      setClientPage(clientPage - 1);
-      page--;
+  const handleNewDate = () => {
+    if (date.currMonth === 11) {
+      setNowDate(new Date(date.currYear + 1, 0, date.currDate));
     } else {
-      date.currMonth = date.currMonth + 1;
-      setClientPage(clientPage + 1);
-      page++;
+      setNowDate(new Date(date.currYear - 1, 11, date.currDate));
     }
+  };
 
-    if (date.currMonth < 0 || date.currMonth > 11) {
-      setNowDate(new Date(date.currYear, date.currMonth, date.currDate));
-    }
+  const handleAddCurrentMonth = () => {
+    setDate((prev) => ({
+      ...prev,
+      currMonth: date.currMonth + 1,
+    }));
+  };
 
+  const handleMinusCurrentMonth = () => {
+    setDate((prev) => ({
+      ...prev,
+      currMonth: date.currMonth - 1,
+    }));
+  };
+
+  const handlePageChange = (page: number) => {
     onPageChange(page);
-  };
-
-  const updateState = (i: number) => {
-    setDaysElement((prevList) => {
-      const newArr = [...prevList.days];
-      const updatedItem = { ...newArr[i] };
-      updatedItem.clicked = !updatedItem.clicked;
-      newArr[i] = updatedItem;
-      return { days: newArr };
-    });
-  };
-
-  const handleDayClick = (
-    e: React.MouseEvent<HTMLSpanElement>,
-    i: number,
-    item: dayElement
-  ) => {
-    const targetButton = e.target as HTMLButtonElement;
-    if (item.active) {
-      const today = clickDay.today;
-      if (clickDay.thisMonth === -1 && clickDay.nextMonth === -1 && i === today)
-        return;
-      updateState(i);
-      if (clientPage === 0 && i !== today) {
-        setClickDay({
-          today: today,
-          thisMonth: i,
-          nextMonth: -1,
-        });
-        if (clickDay.thisMonth !== -1) {
-          updateState(clickDay.thisMonth);
-        }
-      }
-      if (clientPage === 1) {
-        setClickDay({
-          today: today,
-          thisMonth: -1,
-          nextMonth: i,
-        });
-        if (clickDay.nextMonth !== -1) {
-          updateState(clickDay.nextMonth);
-        }
-      }
-
-      if (i !== today && daysElement.days[today].clicked) {
-        updateState(today);
-      } else if (i === today && clientPage === 0) {
-        setClickDay({
-          today: today,
-          thisMonth: -1,
-          nextMonth: -1,
-        });
-        updateState(clickDay.thisMonth);
-      }
-
-      const dataFromChild = `${date.currYear} ${date.currMonth + 1} ${
-        targetButton.textContent
-      }`;
-      onTodayDataChange(dataFromChild);
-      // console.log(
-      //   `${date.currYear} ${date.currMonth + 1} ${targetButton.textContent}`
-      // );
-    }
-  };
-
-  const showClickDate = (res: Data[]) => {
-    if (res === null) return;
-    if (daysElement.days.length === 0) return;
-    if (res.length === 1 && res[0].yymm === "" && res[0].yymm === "") return;
-
-    const newDays = daysElement.days.map((item) => {
-      if (item.active) {
-        for (let i = 0; i < res.length; i++) {
-          item.active = false;
-          if (res[i].date === item.day.toString()) {
-            item.active = true;
-            break;
-          }
-        }
-        return item;
-      } else {
-        return item;
-      }
-    });
-
-    setDaysElement({ days: newDays });
-    // console.log("new", newDays);
   };
 
   useEffect(() => {
     renderCalendar();
-    onTodayDataChange(
-      `${date.currYear} ${date.currMonth + 1} ${date.currDate}`
-    );
+    if (firstLoad) {
+      onTodayDataChange(
+        `${date.currYear} ${date.currMonth + 1} ${date.currDate}`
+      );
+      setFirstLoad(false);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -288,21 +189,26 @@ const Calender: React.FC<CalendarProps> = ({
 
   useEffect(() => {
     renderCalendar();
-    // showClickDate(sureTimedata);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientPage]);
 
   useEffect(() => {
-    showClickDate(sureTimedata);
+    showClickDate(sureTimedata, daysElement, setDaysElement);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sureTimedata]);
 
   useEffect(() => {
-    if (!preventDateClick) showClickDate(sureTimedata);
-    serPreventDateClick(true);
+    if (!preventDateClick)
+      showClickDate(sureTimedata, daysElement, setDaysElement);
+    setPreventDateClick(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [daysElement]);
+
+  useEffect(() => {
+    if (!firstLoad) onTodayDataChange(todayDataChange);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [todayDataChange]);
 
   return (
     <div className="calendar">
@@ -311,28 +217,15 @@ const Calender: React.FC<CalendarProps> = ({
           <span className="title-year">{date.currYear}</span>
           <span className="title-month">{months[date.currMonth]}</span>
         </div>
-        <div className="icons">
-          <span
-            ref={prevIcon}
-            id="prev"
-            className={`material-symbols-rounded ${
-              clientPage === 0 ? "inactive" : ""
-            }`}
-            onClick={(e) => handlePrevNextIcon(e)}
-          >
-            chevron_left
-          </span>
-          <span
-            ref={nextIcon}
-            id="next"
-            className={`material-symbols-rounded ${
-              clientPage === 1 ? "inactive" : ""
-            }`}
-            onClick={(e) => handlePrevNextIcon(e)}
-          >
-            chevron_right
-          </span>
-        </div>
+        <PrevNextBtn
+          clientPage={clientPage}
+          date={date}
+          onPrevNextBtnClick={handlePrevNextBtnClick}
+          onNewDate={handleNewDate}
+          onAddCurrentMonth={handleAddCurrentMonth}
+          onMinusCurrentMonth={handleMinusCurrentMonth}
+          onPageChange={handlePageChange}
+        />
       </header>
       <ul className="weeks">
         <li>Sun</li>
@@ -351,7 +244,20 @@ const Calender: React.FC<CalendarProps> = ({
                 item.isToday ? "isToday" : ""
               } ${item.clicked ? "clicked" : ""}`}
               key={index}
-              onClick={(e) => handleDayClick(e, index, item)}
+              onClick={(e) =>
+                handleDayClick(
+                  e,
+                  index,
+                  clientPage,
+                  date,
+                  item,
+                  clickDay,
+                  daysElement,
+                  setDaysElement,
+                  setClickDay,
+                  setTodayDataChange
+                )
+              }
             >
               {item.day}
             </li>
