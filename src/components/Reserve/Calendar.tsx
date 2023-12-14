@@ -1,11 +1,22 @@
+interface Data {
+  yymm: string;
+  date: string;
+  sureTimeArray: boolean[];
+}
+
+interface CalendarProps {
+  onTodayDataChange: (data: string) => void;
+  onPageChange: (data: number) => void;
+  sureTimedata: { yymm: string; date: string; sureTimeArray: boolean[] }[];
+}
+
 import { useState, useRef, useEffect } from "react";
 
-type CalendarProps = {
-  onTodayDataChange: (data: string) => void;
-  // children: ReactNode;
-};
-
-const Calender: React.FC<CalendarProps> = ({ onTodayDataChange }) => {
+const Calender: React.FC<CalendarProps> = ({
+  onTodayDataChange,
+  onPageChange,
+  sureTimedata,
+}) => {
   interface dateObject {
     currYear: number;
     currMonth: number;
@@ -26,6 +37,7 @@ const Calender: React.FC<CalendarProps> = ({ onTodayDataChange }) => {
   const prevIcon = useRef<HTMLSpanElement>(null);
   const nextIcon = useRef<HTMLSpanElement>(null);
 
+  const [preventDateClick, serPreventDateClick] = useState<boolean>(false);
   const [clientPage, setClientPage] = useState<number>(0);
   const [clickDay, setClickDay] = useState({
     today: -1,
@@ -61,6 +73,7 @@ const Calender: React.FC<CalendarProps> = ({ onTodayDataChange }) => {
   });
 
   const renderCalendar = () => {
+    serPreventDateClick(false);
     daysElement.days = [];
 
     const firstDateOfMonth = new Date(
@@ -89,12 +102,6 @@ const Calender: React.FC<CalendarProps> = ({ onTodayDataChange }) => {
         isToday: false,
         clicked: false,
       });
-      // daysElement.days.push({
-      //   day: lastDateOfLastMonth - i + 1,
-      //   active: false,
-      //   isToday: false,
-      //   clicked: false,
-      // });
     }
 
     for (let i = 1; i <= lastDateOfMonth; i++) {
@@ -150,19 +157,23 @@ const Calender: React.FC<CalendarProps> = ({ onTodayDataChange }) => {
 
   const handlePrevNextIcon = (e: React.MouseEvent<HTMLSpanElement>) => {
     const targetButton = e.target as HTMLButtonElement;
-    // if (
-    //   (clientPage === 0 && targetButton.id === "prev") ||
-    //   (clientPage === 1 && targetButton.id === "next")
-    // )
-    //   return;
-    setDaysElement({ days: [] });
+    if (
+      (clientPage === 0 && targetButton.id === "prev") ||
+      (clientPage === 1 && targetButton.id === "next")
+    )
+      return;
+
+    let page = clientPage;
+    // setDaysElement({ days: [] });
 
     if (targetButton.id === "prev") {
       date.currMonth = date.currMonth - 1;
       setClientPage(clientPage - 1);
+      page--;
     } else {
       date.currMonth = date.currMonth + 1;
       setClientPage(clientPage + 1);
+      page++;
     }
 
     // date.currMonth =
@@ -171,6 +182,8 @@ const Calender: React.FC<CalendarProps> = ({ onTodayDataChange }) => {
     if (date.currMonth < 0 || date.currMonth > 11) {
       setNowDate(new Date(date.currYear, date.currMonth, date.currDate));
     }
+
+    onPageChange(page);
   };
 
   const updateState = (i: number) => {
@@ -236,10 +249,35 @@ const Calender: React.FC<CalendarProps> = ({ onTodayDataChange }) => {
     }
   };
 
+  const showClickDate = (res: Data[]) => {
+    if (res === null) return;
+    if (daysElement.days.length === 0) return;
+    if (res.length === 1 && res[0].yymm === "" && res[0].yymm === "") return;
+
+    const newDays = daysElement.days.map((item) => {
+      if (item.active) {
+        for (let i = 0; i < res.length; i++) {
+          item.active = false;
+          if (res[i].date === item.day.toString()) {
+            item.active = true;
+            break;
+          }
+        }
+        return item;
+      } else {
+        return item;
+      }
+    });
+
+    setDaysElement({ days: newDays });
+    // console.log("new", newDays);
+  };
+
   useEffect(() => {
     renderCalendar();
-
-    onTodayDataChange(`${date.currYear} ${date.currMonth} ${date.currDate}`);
+    onTodayDataChange(
+      `${date.currYear} ${date.currMonth + 1} ${date.currDate}`
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -253,8 +291,21 @@ const Calender: React.FC<CalendarProps> = ({ onTodayDataChange }) => {
 
   useEffect(() => {
     renderCalendar();
+    // showClickDate(sureTimedata);
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientPage]);
+
+  useEffect(() => {
+    showClickDate(sureTimedata);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sureTimedata]);
+
+  useEffect(() => {
+    if (!preventDateClick) showClickDate(sureTimedata);
+    serPreventDateClick(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [daysElement]);
 
   return (
     <div className="calendar">
@@ -315,90 +366,3 @@ const Calender: React.FC<CalendarProps> = ({ onTodayDataChange }) => {
 };
 
 export default Calender;
-/*
-
-import React, { useState } from "react";
-
-const YourComponent = () => {
-  interface itemObg {
-    text: string;
-    clicked: boolean;
-  }
-
-  interface data {
-    arr: itemObg[];
-  }
-
-  // 初始状态
-  const [myList, setMyList] = useState<data>({
-    arr: [
-      { text: "item1", clicked: false },
-      { text: "item2", clicked: false },
-      { text: "item3", clicked: false },
-    ],
-  });
-
-  // const [myList, setMyList] = useState([
-  //   { text: "item1", clicked: false },
-  //   { text: "item2", clicked: false },
-  //   { text: "item3", clicked: false },
-  // ]);
-
-  // 更新数组中的某个值
-  // const updateListItem = (indexToUpdate: number) => {
-  //   setMyList(({prevList}) => {
-  //     const newList = [...prevList.arr];
-  //     const origin = newList[indexToUpdate].clicked;
-  //     newList[indexToUpdate] = { text: "update", clicked: !origin };
-  //     return newList;
-  //   });
-  // };
-
-  const updateListItem = (indexToUpdate: number) => {
-    setMyList((prevList) => {
-      // 创建原数组的副本
-      const newArr = [...prevList.arr];
-
-      // 创建原元素的副本
-      const updatedItem = { ...newArr[indexToUpdate] };
-
-      // 更新副本的 clicked 属性
-      updatedItem.clicked = !updatedItem.clicked;
-
-      // 将更新后的元素放回副本中的对应位置
-      newArr[indexToUpdate] = updatedItem;
-
-      console.log("new", myList.arr);
-
-      // 返回包含更新后数组的新状态
-      return { arr: newArr };
-    });
-  };
-
-  const handle = (indexToUpdate: number) => {
-    updateListItem(indexToUpdate);
-    console.log(myList.arr);
-  };
-
-  return (
-    <div>
-      <ul>
-        {myList.arr.map((item, index) => (
-          <li key={index}>
-            <p
-              className={`${item.clicked ? "test" : ""} ${
-                item.clicked ? "test2" : ""
-              }`}
-              onClick={() => updateListItem(index)}
-            >
-              {item.text}
-            </p>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-};
-
-export default YourComponent;
-*/
