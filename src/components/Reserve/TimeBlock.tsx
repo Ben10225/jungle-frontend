@@ -33,6 +33,7 @@ const TimeBlock = ({ title, sureTimedata }: TimeBlockProps): ReactElement => {
 
   const LoadTimeData = (res: Data[]) => {
     if (res === null) return;
+
     const t: string = `${new Date().getFullYear()}-${
       new Date().getMonth() + 1
     }${new Date().getDate()}`;
@@ -46,6 +47,12 @@ const TimeBlock = ({ title, sureTimedata }: TimeBlockProps): ReactElement => {
         setFirstLoad(false);
       }
     });
+
+    // clean time block
+    if (!firstLoad) {
+      setNowDaySureTimeArray([]);
+      setToday([]);
+    }
   };
 
   const handleClick = () => {
@@ -85,9 +92,9 @@ const TimeBlock = ({ title, sureTimedata }: TimeBlockProps): ReactElement => {
         <div className="time-wrapper">
           <div className="today-block">
             <span>{today[0]}</span>
-            <span style={{ margin: "0px 2px" }}>-</span>
+            {today.length > 0 && <span style={{ margin: "0px 2px" }}>-</span>}
             <span>{today[1]}</span>
-            <span style={{ margin: "0px 2px" }}>-</span>
+            {today.length > 0 && <span style={{ margin: "0px 2px" }}>-</span>}
             <span>{today[2]}</span>
           </div>
           <div className="select-block">

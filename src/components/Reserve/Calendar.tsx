@@ -176,9 +176,6 @@ const Calender: React.FC<CalendarProps> = ({
       page++;
     }
 
-    // date.currMonth =
-    //   targetButton.id === "prev" ? date.currMonth - 1 : date.currMonth + 1;
-
     if (date.currMonth < 0 || date.currMonth > 11) {
       setNowDate(new Date(date.currYear, date.currMonth, date.currDate));
     }
