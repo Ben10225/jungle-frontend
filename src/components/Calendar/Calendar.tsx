@@ -1,17 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useReducer } from "react";
+import { reducer, SureTimedata, months } from "./CalenderNeeds";
 import PrevNextBtn from "./PrevNextBtn";
-import { handleReserveDayClick, showClickDate } from "../Reserve/ReserveRule";
 import {
   dayElement,
   daysElementState,
   clickDay,
   dateObject,
-} from "../Reserve/ReserveRule";
+} from "./CalenderNeeds";
 
 interface CalendarProps {
   onTodayDataChange: (data: string) => void;
   onPageChange: (data: number) => void;
-  sureTimedata: { yymm: string; date: string; sureTimeArray: boolean[] }[];
+  sureTimedata: SureTimedata[];
   nowRoute: string;
 }
 
@@ -23,7 +23,6 @@ const Calender: React.FC<CalendarProps> = ({
 }) => {
   const [firstLoad, setFirstLoad] = useState<boolean>(true);
   const [todayDataChange, setTodayDataChange] = useState<string>("");
-  const [preventDateClick, setPreventDateClick] = useState<boolean>(false);
   const [clientPage, setClientPage] = useState<number>(0);
   const [nowDate, setNowDate] = useState<Date>(new Date());
   const [clickDay, setClickDay] = useState<clickDay>({
@@ -32,20 +31,30 @@ const Calender: React.FC<CalendarProps> = ({
     nextMonth: -1,
   });
 
-  const months = [
-    "Jan.",
-    "Feb.",
-    "Mar.",
-    "Apr.",
-    "May",
-    "Jun.",
-    "Jul.",
-    "Aug.",
-    "Sep.",
-    "Oct.",
-    "Nov.",
-    "Dec.",
-  ];
+  const initialState: daysElementState = {
+    days: [
+      {
+        day: 0,
+        active: false,
+        isToday: false,
+        clicked: true,
+      },
+    ],
+  };
+
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  const handleClick = (index: number, item: dayElement) => {
+    if (nowRoute === "reserve" && !item.active) return;
+
+    dispatch({
+      type: "UPDATE_DATE_CLICK",
+      payload: { index: index, nowRoute: nowRoute },
+    });
+
+    const str: string = `${date.currYear} ${date.currMonth + 1} ${item.day}`;
+    setTodayDataChange(str);
+  };
 
   const [daysElement, setDaysElement] = useState<daysElementState>({
     days: [],
@@ -58,7 +67,6 @@ const Calender: React.FC<CalendarProps> = ({
   });
 
   const renderCalendar = () => {
-    setPreventDateClick(false);
     daysElement.days = [];
 
     const firstDateOfMonth = new Date(
@@ -137,7 +145,15 @@ const Calender: React.FC<CalendarProps> = ({
     ) {
       tmp[clickDay.today].clicked = !tmp[clickDay.today].clicked;
     }
+
     setDaysElement({ days: tmp });
+
+    dispatch({
+      type: "SET_DATE_DATA",
+      payload: { days: tmp },
+    });
+
+    if (!firstLoad) dispatch({ type: "CLEAR_CLICK" });
   };
 
   const handlePrevNextBtnClick = (data: number) => {
@@ -191,27 +207,19 @@ const Calender: React.FC<CalendarProps> = ({
 
   useEffect(() => {
     renderCalendar();
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientPage]);
-
-  useEffect(() => {
-    if (nowRoute === "reserve")
-      showClickDate(sureTimedata, daysElement, setDaysElement);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sureTimedata]);
-
-  useEffect(() => {
-    if (!preventDateClick && nowRoute === "reserve")
-      showClickDate(sureTimedata, daysElement, setDaysElement);
-    setPreventDateClick(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [daysElement]);
 
   useEffect(() => {
     if (!firstLoad) onTodayDataChange(todayDataChange);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [todayDataChange]);
+
+  useEffect(() => {
+    if (nowRoute === "reserve")
+      dispatch({ type: "RESERVE_CLICK", payload: { data: sureTimedata } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sureTimedata]);
 
   return (
     <div className="calendar">
@@ -250,20 +258,7 @@ const Calender: React.FC<CalendarProps> = ({
                   item.isToday ? "isToday" : ""
                 } ${item.clicked ? "clicked" : ""}`}
                 key={index}
-                onClick={(e) =>
-                  handleReserveDayClick(
-                    e,
-                    index,
-                    clientPage,
-                    date,
-                    item,
-                    clickDay,
-                    daysElement,
-                    setDaysElement,
-                    setClickDay,
-                    setTodayDataChange
-                  )
-                }
+                onClick={() => handleClick(index, item)}
               >
                 {item.day}
               </li>
@@ -274,7 +269,7 @@ const Calender: React.FC<CalendarProps> = ({
       {/* arrange */}
       {nowRoute === "arrange" && (
         <ul className="days">
-          {daysElement.days.map((item, index) => {
+          {state.days.map((item, index) => {
             return (
               nowRoute === "arrange" && (
                 <li
@@ -282,20 +277,7 @@ const Calender: React.FC<CalendarProps> = ({
                     item.isToday ? "isToday" : ""
                   } ${item.clicked ? "clicked" : ""}`}
                   key={index}
-                  onClick={(e) =>
-                    handleReserveDayClick(
-                      e,
-                      index,
-                      clientPage,
-                      date,
-                      item,
-                      clickDay,
-                      daysElement,
-                      setDaysElement,
-                      setClickDay,
-                      setTodayDataChange
-                    )
-                  }
+                  onClick={() => handleClick(index, item)}
                 >
                   {item.day}
                 </li>

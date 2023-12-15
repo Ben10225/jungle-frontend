@@ -6,18 +6,27 @@ interface TimeBlockProps {
   sureTimedata: { yymm: string; date: string; sureTimeArray: boolean[] }[];
 }
 
-// interface ArrangeItem {
-//   value: boolean;
-// }
-
-interface State {
-  array: boolean[];
+interface SureTimedata {
+  yymm: string;
+  date: string;
+  sureTimeArray: boolean[];
 }
 
-type Action = {
+interface UpdateDateAction {
   type: "UPDATE_ITEM";
   payload: { index: number; newValue: boolean };
-};
+}
+
+interface SetDataAcrion {
+  type: "SET_DATA";
+  payload: { data: SureTimedata[] };
+}
+
+interface CleanTableAction {
+  type: "CLEAN_TABLE";
+}
+
+type Action = UpdateDateAction | SetDataAcrion | CleanTableAction;
 
 const TimeBlock = ({
   title,
@@ -43,12 +52,12 @@ const TimeBlock = ({
   const [today, setToday] = useState<string[]>([]);
   const [nowDaySureTimeArray, setNowDaySureTimeArray] = useState<boolean[]>([]);
 
-  const reducer = (state: State, action: Action) => {
+  const reducer = (state: SureTimedata, action: Action) => {
     switch (action.type) {
       case "UPDATE_ITEM":
         return {
           ...state,
-          array: state.array.map((item, i) => {
+          sureTimeArray: state.sureTimeArray.map((item, i) => {
             if (action.payload.index === i) {
               console.log("date:", title, "time:", i + 10);
               return !item;
@@ -57,26 +66,45 @@ const TimeBlock = ({
             }
           }),
         };
+      case "SET_DATA": {
+        const todayString = today[0] + "-" + today[1] + today[2];
+        const matchingItem = action.payload.data.find(
+          (item) => todayString === item.yymm + item.date
+        );
+        return {
+          ...state,
+          sureTimeArray: matchingItem
+            ? matchingItem.sureTimeArray
+            : [
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+              ],
+        };
+      }
+      case "CLEAN_TABLE":
+        return {
+          ...state,
+          sureTimeArray: [],
+        };
       default:
         return state;
     }
   };
 
-  const initialState = {
-    array: [
-      true,
-      true,
-      false,
-      true,
-      true,
-      false,
-      true,
-      true,
-      false,
-      true,
-      true,
-      false,
-    ],
+  const initialState: SureTimedata = {
+    yymm: "",
+    date: "",
+    sureTimeArray: [],
   };
 
   const [state, dispatch] = useReducer(reducer, initialState);
@@ -87,21 +115,6 @@ const TimeBlock = ({
       payload: { index: index, newValue: newValue },
     });
   };
-
-  // const [arrangeSureDateArray, setArrangeSureDateArray] = useState<boolean[]>([
-  //   true,
-  //   true,
-  //   true,
-  //   true,
-  //   true,
-  //   true,
-  //   true,
-  //   false,
-  //   false,
-  //   true,
-  //   true,
-  //   true,
-  // ]);
 
   const getTodayString = (data: string) => {
     const str: string[] = data.split(" ");
@@ -147,20 +160,31 @@ const TimeBlock = ({
     setSelectIndex(index);
   };
 
-  // const handleArrange = (index: number) => {
-  // // console.log("date:", title, "time:", index + 10);
-  // const arr = arrangeSureDateArray;
-  // arr[index] = !arr[index];
-  // setArrangeSureDateArray([...arr]);
-  // };
-
   useEffect(() => {
     getTodayString(title);
     setSelectIndex(-1);
+    dispatch({
+      type: "SET_DATA",
+      payload: { data: sureTimedata },
+    });
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title]);
 
   useEffect(() => {
     LoadTimeData(sureTimedata);
+
+    if (firstLoad) {
+      dispatch({
+        type: "SET_DATA",
+        payload: { data: sureTimedata },
+      });
+    } else {
+      dispatch({
+        type: "CLEAN_TABLE",
+      });
+    }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sureTimedata]);
 
@@ -168,8 +192,6 @@ const TimeBlock = ({
     handleClick();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [today]);
-
-  // useEffect(() => {}, [arrangeSureDateArray]);
 
   return (
     <div className="flex justify-center flex-col items-center">
@@ -204,7 +226,7 @@ const TimeBlock = ({
           {/* arrange */}
           {nowRoute === "arrange" && (
             <div className="select-block">
-              {state.array.map((bool, i) => {
+              {state.sureTimeArray.map((bool, i) => {
                 return (
                   <div
                     onClick={() => updateItem(i, bool)}

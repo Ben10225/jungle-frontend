@@ -77,7 +77,6 @@ const ArrangePage = () => {
           nextMonth: nextMonth,
         });
 
-        // console.log(response.data.result);
         setSureTimeData({
           result: {
             thisMonth: response.data.result.thisMonth,
