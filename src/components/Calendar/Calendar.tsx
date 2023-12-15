@@ -1,23 +1,25 @@
 import { useState, useEffect } from "react";
 import PrevNextBtn from "./PrevNextBtn";
-import { handleDayClick, showClickDate } from "./ReserveRule";
+import { handleReserveDayClick, showClickDate } from "../Reserve/ReserveRule";
 import {
   dayElement,
   daysElementState,
   clickDay,
   dateObject,
-} from "./ReserveRule";
+} from "../Reserve/ReserveRule";
 
 interface CalendarProps {
   onTodayDataChange: (data: string) => void;
   onPageChange: (data: number) => void;
   sureTimedata: { yymm: string; date: string; sureTimeArray: boolean[] }[];
+  nowRoute: string;
 }
 
 const Calender: React.FC<CalendarProps> = ({
   onTodayDataChange,
   onPageChange,
   sureTimedata,
+  nowRoute,
 }) => {
   const [firstLoad, setFirstLoad] = useState<boolean>(true);
   const [todayDataChange, setTodayDataChange] = useState<string>("");
@@ -194,12 +196,13 @@ const Calender: React.FC<CalendarProps> = ({
   }, [clientPage]);
 
   useEffect(() => {
-    showClickDate(sureTimedata, daysElement, setDaysElement);
+    if (nowRoute === "reserve")
+      showClickDate(sureTimedata, daysElement, setDaysElement);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sureTimedata]);
 
   useEffect(() => {
-    if (!preventDateClick)
+    if (!preventDateClick && nowRoute === "reserve")
       showClickDate(sureTimedata, daysElement, setDaysElement);
     setPreventDateClick(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -220,6 +223,7 @@ const Calender: React.FC<CalendarProps> = ({
         <PrevNextBtn
           clientPage={clientPage}
           date={date}
+          nowRoute={nowRoute}
           onPrevNextBtnClick={handlePrevNextBtnClick}
           onNewDate={handleNewDate}
           onAddCurrentMonth={handleAddCurrentMonth}
@@ -236,34 +240,70 @@ const Calender: React.FC<CalendarProps> = ({
         <li>Fri</li>
         <li>Sat</li>
       </ul>
-      <ul className="days">
-        {daysElement.days.map((item, index) => {
-          return (
-            <li
-              className={`day ${item.active ? "" : "inactive"} ${
-                item.isToday ? "isToday" : ""
-              } ${item.clicked ? "clicked" : ""}`}
-              key={index}
-              onClick={(e) =>
-                handleDayClick(
-                  e,
-                  index,
-                  clientPage,
-                  date,
-                  item,
-                  clickDay,
-                  daysElement,
-                  setDaysElement,
-                  setClickDay,
-                  setTodayDataChange
-                )
-              }
-            >
-              {item.day}
-            </li>
-          );
-        })}
-      </ul>
+      {/* reserve */}
+      {nowRoute === "reserve" && (
+        <ul className="days">
+          {daysElement.days.map((item, index) => {
+            return (
+              <li
+                className={`day ${item.active ? "" : "inactive"} ${
+                  item.isToday ? "isToday" : ""
+                } ${item.clicked ? "clicked" : ""}`}
+                key={index}
+                onClick={(e) =>
+                  handleReserveDayClick(
+                    e,
+                    index,
+                    clientPage,
+                    date,
+                    item,
+                    clickDay,
+                    daysElement,
+                    setDaysElement,
+                    setClickDay,
+                    setTodayDataChange
+                  )
+                }
+              >
+                {item.day}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {/* arrange */}
+      {nowRoute === "arrange" && (
+        <ul className="days">
+          {daysElement.days.map((item, index) => {
+            return (
+              nowRoute === "arrange" && (
+                <li
+                  className={`day ${item.active ? "" : "inactive"} ${
+                    item.isToday ? "isToday" : ""
+                  } ${item.clicked ? "clicked" : ""}`}
+                  key={index}
+                  onClick={(e) =>
+                    handleReserveDayClick(
+                      e,
+                      index,
+                      clientPage,
+                      date,
+                      item,
+                      clickDay,
+                      daysElement,
+                      setDaysElement,
+                      setClickDay,
+                      setTodayDataChange
+                    )
+                  }
+                >
+                  {item.day}
+                </li>
+              )
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 };

@@ -34,7 +34,7 @@ type SetDaysElementFunction = React.Dispatch<
 type SetClickDayFunction = React.Dispatch<React.SetStateAction<clickDay>>;
 type SetTodayDataFunction = React.Dispatch<React.SetStateAction<string>>;
 
-export const handleDayClick = (
+export const handleReserveDayClick = (
   e: React.MouseEvent<HTMLSpanElement>,
   i: number,
   clientPage: number,

@@ -125,3 +125,7 @@ body {
 .time.select {
   background-color: #ffe358;
 }
+
+.time.stop {
+  opacity: 0.2;
+}

@@ -17,8 +17,8 @@ interface ResData {
   };
 }
 
-const ReservePage = () => {
-  const nowRoute = "reserve";
+const ArrangePage = () => {
+  const nowRoute = "arrange";
   const [dataFromCalendar, setDataFromCalendar] = useState<string>("");
   const [forChildSureData, setForChildSureData] = useState<Data[]>([
     { yymm: "", date: "", sureTimeArray: [] },
@@ -117,4 +117,4 @@ const ReservePage = () => {
   );
 };
 
-export default ReservePage;
+export default ArrangePage;
