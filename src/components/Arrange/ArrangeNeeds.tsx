@@ -1,12 +1,12 @@
-import { SureTimedata } from "../Calendar/CalenderNeeds";
+import { WorkTimeData } from "../Calendar/CalenderNeeds";
 
 interface ArrangeData {
-  arrange: SureTimedata[];
+  arrange: WorkTimeData[];
 }
 
 interface UpdateDataAction {
   type: "UPDATE_DATA";
-  payload: { str: string; update: boolean[] };
+  payload: { str: string; update: number[] };
 }
 
 // export interface SetDataAcrion {
@@ -32,15 +32,15 @@ export const arrangeReducer = (state: ArrangeData, action: Action) => {
   switch (action.type) {
     case "UPDATE_DATA": {
       const tmpStr: string[] = action.payload.str.split(" ");
-      const dayData: SureTimedata = {
+      const dayData: WorkTimeData = {
         date: tmpStr[2],
         yymm: tmpStr[0] + tmpStr[1],
-        sureTimeArray: action.payload.update,
+        workTime: action.payload.update,
       };
-      console.log(dayData);
+      console.log("dayData", dayData);
       return {
         ...state,
-        days: state.arrange.map((item, i) => {
+        arrange: state.arrange.map((item) => {
           return item;
         }),
       };
@@ -108,5 +108,5 @@ export const arrangeReducer = (state: ArrangeData, action: Action) => {
 };
 
 export const arrangeDataInit: ArrangeData = {
-  arrange: [{ yymm: "", date: "", sureTimeArray: [] }],
+  arrange: [{ yymm: "", date: "", workTime: [] }],
 };

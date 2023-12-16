@@ -3,17 +3,18 @@ import Calendar from "../Calendar/Calendar";
 import TimeBlock from "../Calendar/TimeBlock";
 import { useState, useEffect } from "react";
 import { ENDPOINT } from "../../App";
+import { WorkTimeData } from "../Calendar/CalenderNeeds";
 
-interface Data {
-  yymm: string;
-  date: string;
-  sureTimeArray: boolean[];
-}
+// interface Data {
+//   yymm: string;
+//   date: string;
+//   workTimeData: number[];
+// }
 
 interface ResData {
   result: {
-    thisMonth: Data[];
-    nextMonth: Data[];
+    thisMonth: WorkTimeData[];
+    nextMonth: WorkTimeData[];
   };
 }
 
@@ -21,8 +22,8 @@ const ArrangePage = () => {
   const nowRoute = "arrange";
   const [dataFromCalendar, setDataFromCalendar] = useState<string>("");
   const [isChecked, setChecked] = useState(false);
-  const [forChildSureData, setForChildSureData] = useState<Data[]>([
-    { yymm: "", date: "", sureTimeArray: [] },
+  const [forChildSureData, setForChildSureData] = useState<WorkTimeData[]>([
+    { yymm: "", date: "", workTime: [] },
   ]);
   const [sureTimeData, setSureTimeData] = useState<ResData>({
     result: {
@@ -30,14 +31,14 @@ const ArrangePage = () => {
         {
           yymm: "",
           date: "",
-          sureTimeArray: [],
+          workTime: [],
         },
       ],
       nextMonth: [
         {
           yymm: "",
           date: "",
-          sureTimeArray: [],
+          workTime: [],
         },
       ],
     },
@@ -110,12 +111,12 @@ const ArrangePage = () => {
             <Calendar
               onTodayDataChange={handleTodayDataChange}
               onPageChange={handlePageChange}
-              sureTimedata={forChildSureData}
+              fetchWorkTimeDatas={forChildSureData}
               nowRoute={nowRoute}
             />
             <TimeBlock
               title={dataFromCalendar}
-              sureTimedata={forChildSureData}
+              fetchWorkTimeDatas={forChildSureData}
               nowRoute={nowRoute}
               arrangeState={isChecked}
             />

@@ -1,3 +1,5 @@
+import { work } from "../Constant";
+
 export interface dayElement {
   day: number;
   active: boolean;
@@ -21,10 +23,10 @@ export interface dateObject {
   currDate: number;
 }
 
-export interface SureTimedata {
+export interface WorkTimeData {
   yymm: string;
   date: string;
-  sureTimeArray: boolean[];
+  workTime: number[];
 }
 [];
 
@@ -44,7 +46,7 @@ export interface ClearClickAcrion {
 
 export interface ReserveClickAcrion {
   type: "RESERVE_CLICK";
-  payload: { data: SureTimedata[] };
+  payload: { data: WorkTimeData[] };
 }
 
 export type Action =
@@ -92,7 +94,7 @@ export const reducer = (state: daysElementState, action: Action) => {
       }
       const allFalseArr: number[] = [];
       action.payload.data.forEach((item) => {
-        item.sureTimeArray.every((bool) => bool === false)
+        item.workTime.every((state) => state === work.off)
           ? allFalseArr.push(parseInt(item.date))
           : null;
       });
@@ -110,7 +112,7 @@ export const reducer = (state: daysElementState, action: Action) => {
         return item;
       });
 
-      // if today's sure time all false cancel click ability
+      // if today's work time all off cancel click ability
       let passDay1: boolean = false;
       tmp.forEach((item) => {
         if (item.day === 1) passDay1 = true;

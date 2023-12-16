@@ -3,25 +3,20 @@ import Calendar from "../Calendar/Calendar";
 import TimeBlock from "../Calendar/TimeBlock";
 import { useState, useEffect } from "react";
 import { ENDPOINT } from "../../App";
-
-interface Data {
-  yymm: string;
-  date: string;
-  sureTimeArray: boolean[];
-}
+import { WorkTimeData } from "../Calendar/CalenderNeeds";
 
 interface ResData {
   result: {
-    thisMonth: Data[];
-    nextMonth: Data[];
+    thisMonth: WorkTimeData[];
+    nextMonth: WorkTimeData[];
   };
 }
 
 const ReservePage = () => {
   const nowRoute = "reserve";
   const [dataFromCalendar, setDataFromCalendar] = useState<string>("");
-  const [forChildSureData, setForChildSureData] = useState<Data[]>([
-    { yymm: "", date: "", sureTimeArray: [] },
+  const [forChildSureData, setForChildSureData] = useState<WorkTimeData[]>([
+    { yymm: "", date: "", workTime: [] },
   ]);
   const [sureTimeData, setSureTimeData] = useState<ResData>({
     result: {
@@ -29,14 +24,14 @@ const ReservePage = () => {
         {
           yymm: "",
           date: "",
-          sureTimeArray: [],
+          workTime: [],
         },
       ],
       nextMonth: [
         {
           yymm: "",
           date: "",
-          sureTimeArray: [],
+          workTime: [],
         },
       ],
     },
@@ -44,12 +39,14 @@ const ReservePage = () => {
 
   const handleTodayDataChange = (data: string) => {
     setDataFromCalendar(data);
+    console.log("here");
   };
 
   const handlePageChange = (page: number) => {
     page === 1
       ? setForChildSureData(sureTimeData.result.nextMonth)
       : setForChildSureData(sureTimeData.result.thisMonth);
+    setDataFromCalendar("");
   };
 
   const getNextMonth = () => {
@@ -102,12 +99,12 @@ const ReservePage = () => {
             <Calendar
               onTodayDataChange={handleTodayDataChange}
               onPageChange={handlePageChange}
-              sureTimedata={forChildSureData}
+              fetchWorkTimeDatas={forChildSureData}
               nowRoute={nowRoute}
             />
             <TimeBlock
               title={dataFromCalendar}
-              sureTimedata={forChildSureData}
+              fetchWorkTimeDatas={forChildSureData}
               nowRoute={nowRoute}
               arrangeState={false}
             />

@@ -1,5 +1,5 @@
 import { useState, useEffect, useReducer } from "react";
-import { reducer, SureTimedata, months } from "./CalenderNeeds";
+import { reducer, WorkTimeData, months } from "./CalenderNeeds";
 import PrevNextBtn from "./PrevNextBtn";
 import {
   dayElement,
@@ -11,18 +11,17 @@ import {
 interface CalendarProps {
   onTodayDataChange: (data: string) => void;
   onPageChange: (data: number) => void;
-  sureTimedata: SureTimedata[];
+  fetchWorkTimeDatas: WorkTimeData[];
   nowRoute: string;
 }
 
 const Calender: React.FC<CalendarProps> = ({
   onTodayDataChange,
   onPageChange,
-  sureTimedata,
+  fetchWorkTimeDatas,
   nowRoute,
 }) => {
   const [firstLoad, setFirstLoad] = useState<boolean>(true);
-  const [todayDataChange, setTodayDataChange] = useState<string>("");
   const [clientPage, setClientPage] = useState<number>(0);
   const [nowDate, setNowDate] = useState<Date>(new Date());
   const [clickDay, setClickDay] = useState<clickDay>({
@@ -45,7 +44,7 @@ const Calender: React.FC<CalendarProps> = ({
   const [state, dispatch] = useReducer(reducer, initialState);
 
   const handleClick = (index: number, item: dayElement) => {
-    if (nowRoute === "reserve" && !item.active) return;
+    if (!item.active) return;
 
     dispatch({
       type: "UPDATE_DATE_CLICK",
@@ -53,7 +52,7 @@ const Calender: React.FC<CalendarProps> = ({
     });
 
     const str: string = `${date.currYear} ${date.currMonth + 1} ${item.day}`;
-    setTodayDataChange(str);
+    onTodayDataChange(str);
   };
 
   const [daysElement, setDaysElement] = useState<daysElementState>({
@@ -211,15 +210,13 @@ const Calender: React.FC<CalendarProps> = ({
   }, [clientPage]);
 
   useEffect(() => {
-    if (!firstLoad) onTodayDataChange(todayDataChange);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [todayDataChange]);
-
-  useEffect(() => {
     if (nowRoute === "reserve")
-      dispatch({ type: "RESERVE_CLICK", payload: { data: sureTimedata } });
+      dispatch({
+        type: "RESERVE_CLICK",
+        payload: { data: fetchWorkTimeDatas },
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sureTimedata]);
+  }, [fetchWorkTimeDatas]);
 
   return (
     <div className="calendar">
