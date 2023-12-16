@@ -1,8 +1,10 @@
 import { ReactElement, useState, useEffect, useReducer } from "react";
+import { arrangeReducer, arrangeDataInit } from "../Arrange/ArrangeNeeds";
 
 interface TimeBlockProps {
   title: string;
   nowRoute: string;
+  arrangeState: boolean;
   sureTimedata: { yymm: string; date: string; sureTimeArray: boolean[] }[];
 }
 
@@ -26,12 +28,22 @@ interface CleanTableAction {
   type: "CLEAN_TABLE";
 }
 
-type Action = UpdateDateAction | SetDataAcrion | CleanTableAction;
+interface GetNowDaySureTimeArray {
+  type: "GET_SURE_ARRAY";
+  payload: { index: number };
+}
+
+type Action =
+  | UpdateDateAction
+  | SetDataAcrion
+  | CleanTableAction
+  | GetNowDaySureTimeArray;
 
 const TimeBlock = ({
   title,
   sureTimedata,
   nowRoute,
+  arrangeState,
 }: TimeBlockProps): ReactElement => {
   interface Data {
     yymm: string;
@@ -59,7 +71,6 @@ const TimeBlock = ({
           ...state,
           sureTimeArray: state.sureTimeArray.map((item, i) => {
             if (action.payload.index === i) {
-              console.log("date:", title, "time:", i + 10);
               return !item;
             } else {
               return item;
@@ -96,6 +107,12 @@ const TimeBlock = ({
           ...state,
           sureTimeArray: [],
         };
+      case "GET_SURE_ARRAY": {
+        console.log(state.sureTimeArray);
+        return {
+          ...state,
+        };
+      }
       default:
         return state;
     }
@@ -108,12 +125,22 @@ const TimeBlock = ({
   };
 
   const [state, dispatch] = useReducer(reducer, initialState);
+  const [arrangeDataState, arrangeDataDispatch] = useReducer(
+    arrangeReducer,
+    arrangeDataInit
+  );
 
-  const updateItem = (index: number, newValue: boolean) => {
+  const handleArrangePeriodClick = (index: number, newValue: boolean) => {
     dispatch({
       type: "UPDATE_ITEM",
       payload: { index: index, newValue: newValue },
     });
+
+    const arr: boolean[] = [...state.sureTimeArray];
+    arr[index] = !arr[index];
+
+    // arrange
+    updateArrangeData(title, arr);
   };
 
   const getTodayString = (data: string) => {
@@ -155,10 +182,37 @@ const TimeBlock = ({
     });
   };
 
-  const handleReserve = (index: number) => {
-    console.log("date:", title, "time:", index + 10);
+  const handleReserveClickPeriod = (index: number) => {
+    // console.log("date:", title, "time:", index + 10);
     setSelectIndex(index);
   };
+
+  const firstLoadDayInactive = (sureTimedata: SureTimedata[]) => {
+    sureTimedata.forEach((item) => {
+      if (item.date === today[2]) {
+        item.sureTimeArray.every((bool) => bool === false)
+          ? setToday([])
+          : null;
+      }
+    });
+  };
+
+  const handleSaveArrangeDate = () => {
+    if (arrangeState) {
+      console.log("save");
+    }
+  };
+
+  /* arrange reducer func  */
+
+  const updateArrangeData = (str: string, update: boolean[]) => {
+    arrangeDataDispatch({
+      type: "UPDATE_DATA",
+      payload: { str: str, update: update },
+    });
+  };
+
+  /* --------------------  */
 
   useEffect(() => {
     getTodayString(title);
@@ -185,13 +239,21 @@ const TimeBlock = ({
       });
     }
 
+    // console.log(sureTimedata);
+    firstLoadDayInactive(sureTimedata);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sureTimedata]);
 
   useEffect(() => {
     handleClick();
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [today]);
+
+  useEffect(() => {
+    if (nowRoute !== "arrange") return;
+    handleSaveArrangeDate();
+  }, [arrangeState]);
 
   return (
     <div className="flex justify-center flex-col items-center">
@@ -212,7 +274,7 @@ const TimeBlock = ({
                 return (
                   bool && (
                     <div
-                      onClick={() => handleReserve(i)}
+                      onClick={() => handleReserveClickPeriod(i)}
                       key={i}
                       className={`time ${selectIndex === i ? "select" : ""}`}
                     >
@@ -229,7 +291,7 @@ const TimeBlock = ({
               {state.sureTimeArray.map((bool, i) => {
                 return (
                   <div
-                    onClick={() => updateItem(i, bool)}
+                    onClick={() => handleArrangePeriodClick(i, bool)}
                     key={i}
                     className={`time ${!bool ? "stop" : ""} `}
                   >

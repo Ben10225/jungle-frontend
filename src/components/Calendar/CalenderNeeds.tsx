@@ -90,22 +90,40 @@ export const reducer = (state: daysElementState, action: Action) => {
           ...state,
         };
       }
-      return {
-        ...state,
-        days: state.days.map((item) => {
-          if (item.active) {
-            for (let i = 0; i < action.payload.data.length; i++) {
-              item.active = false;
-              // console.log(action.payload.data);
-              if (action.payload.data[i].date === item.day.toString()) {
-                item.active = true;
-                break;
-              }
+      const allFalseArr: number[] = [];
+      action.payload.data.forEach((item) => {
+        item.sureTimeArray.every((bool) => bool === false)
+          ? allFalseArr.push(parseInt(item.date))
+          : null;
+      });
+
+      const tmp = state.days.map((item) => {
+        if (item.active) {
+          for (let i = 0; i < action.payload.data.length; i++) {
+            item.active = false;
+            if (action.payload.data[i].date === item.day.toString()) {
+              item.active = true;
+              break;
             }
           }
-          console.log(item);
-          return item;
-        }),
+        }
+        return item;
+      });
+
+      // if today's sure time all false cancel click ability
+      let passDay1: boolean = false;
+      tmp.forEach((item) => {
+        if (item.day === 1) passDay1 = true;
+        if (!passDay1) return;
+        if (allFalseArr.includes(item.day)) {
+          item.clicked = false;
+          item.active = false;
+        }
+      });
+
+      return {
+        ...state,
+        days: tmp,
       };
     }
     default:

@@ -109,6 +109,7 @@ const ReservePage = () => {
               title={dataFromCalendar}
               sureTimedata={forChildSureData}
               nowRoute={nowRoute}
+              arrangeState={false}
             />
           </div>
         </div>

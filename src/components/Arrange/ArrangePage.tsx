@@ -20,6 +20,7 @@ interface ResData {
 const ArrangePage = () => {
   const nowRoute = "arrange";
   const [dataFromCalendar, setDataFromCalendar] = useState<string>("");
+  const [isChecked, setChecked] = useState(false);
   const [forChildSureData, setForChildSureData] = useState<Data[]>([
     { yymm: "", date: "", sureTimeArray: [] },
   ]);
@@ -61,6 +62,14 @@ const ArrangePage = () => {
     }
 
     return yy + "-" + mm;
+  };
+
+  const handleCheckboxChange = () => {
+    setChecked(!isChecked);
+  };
+
+  const handleUpdateArrangeData = () => {
+    if (!isChecked) return;
   };
 
   useEffect(() => {
@@ -108,7 +117,21 @@ const ArrangePage = () => {
               title={dataFromCalendar}
               sureTimedata={forChildSureData}
               nowRoute={nowRoute}
+              arrangeState={isChecked}
             />
+            <input
+              type="checkbox"
+              checked={isChecked}
+              onChange={handleCheckboxChange}
+              className="w-6 h-6 left-5 top-5 relative"
+            />
+            <button
+              type="button"
+              className="relative top-5 left-10 text-white bg-blue-700 outline-none font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600"
+              onClick={() => handleUpdateArrangeData()}
+            >
+              update data
+            </button>
           </div>
         </div>
       </main>

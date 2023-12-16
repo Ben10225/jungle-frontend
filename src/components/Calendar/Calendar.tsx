@@ -251,7 +251,7 @@ const Calender: React.FC<CalendarProps> = ({
       {/* reserve */}
       {nowRoute === "reserve" && (
         <ul className="days">
-          {daysElement.days.map((item, index) => {
+          {state.days.map((item, index) => {
             return (
               <li
                 className={`day ${item.active ? "" : "inactive"} ${
