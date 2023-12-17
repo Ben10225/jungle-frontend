@@ -30,30 +30,36 @@ export interface WorkTimeData {
 }
 [];
 
-export interface UpdateDateAction {
+interface UpdateDateAction {
   type: "UPDATE_DATE_CLICK";
   payload: { index: number; nowRoute: string };
 }
 
-export interface SetDataAcrion {
+interface SetDataAction {
   type: "SET_DATE_DATA";
   payload: { days: dayElement[] };
 }
 
-export interface ClearClickAcrion {
+interface ClearClickAcyion {
   type: "CLEAR_CLICK";
 }
 
-export interface ReserveClickAcrion {
+interface ReserveClickAction {
   type: "RESERVE_CLICK";
   payload: { data: WorkTimeData[] };
 }
 
+interface AdminShowReservedAction {
+  type: "ADMIN_SHOWRESERVED";
+  // payload: { data: WorkTimeData[] };
+}
+
 export type Action =
   | UpdateDateAction
-  | SetDataAcrion
-  | ClearClickAcrion
-  | ReserveClickAcrion;
+  | SetDataAction
+  | ClearClickAcyion
+  | ReserveClickAction
+  | AdminShowReservedAction;
 
 export const reducer = (state: daysElementState, action: Action) => {
   switch (action.type) {
@@ -128,6 +134,21 @@ export const reducer = (state: daysElementState, action: Action) => {
         days: tmp,
       };
     }
+    case "ADMIN_SHOWRESERVED": {
+      let pass: boolean = true;
+      return {
+        ...state,
+        days: state.days.map((item) => {
+          if (item.day === 1) pass = false;
+          if (pass) {
+            return item;
+          }
+          item.active = true;
+          return item;
+        }),
+      };
+    }
+
     default:
       return state;
   }

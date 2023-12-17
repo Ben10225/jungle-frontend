@@ -1,5 +1,6 @@
 import { useState, useEffect, useReducer } from "react";
 import { reducer, WorkTimeData, months } from "./CalenderNeeds";
+import { CLickEvents } from "../Constant";
 import PrevNextBtn from "./PrevNextBtn";
 import {
   dayElement,
@@ -9,10 +10,11 @@ import {
 } from "./CalenderNeeds";
 
 interface CalendarProps {
-  onTodayDataChange: (data: string) => void;
+  onTodayDataChange: (data: CLickEvents) => void;
   onPageChange: (data: number) => void;
   fetchWorkTimeDatas: WorkTimeData[];
   nowRoute: string;
+  mode: string;
 }
 
 const Calender: React.FC<CalendarProps> = ({
@@ -20,7 +22,10 @@ const Calender: React.FC<CalendarProps> = ({
   onPageChange,
   fetchWorkTimeDatas,
   nowRoute,
+  mode,
 }) => {
+  let clickDetect: boolean = false;
+
   const [firstLoad, setFirstLoad] = useState<boolean>(true);
   const [clientPage, setClientPage] = useState<number>(0);
   const [nowDate, setNowDate] = useState<Date>(new Date());
@@ -42,18 +47,6 @@ const Calender: React.FC<CalendarProps> = ({
   };
 
   const [state, dispatch] = useReducer(reducer, initialState);
-
-  const handleClick = (index: number, item: dayElement) => {
-    if (!item.active) return;
-
-    dispatch({
-      type: "UPDATE_DATE_CLICK",
-      payload: { index: index, nowRoute: nowRoute },
-    });
-
-    const str: string = `${date.currYear} ${date.currMonth + 1} ${item.day}`;
-    onTodayDataChange(str);
-  };
 
   const [daysElement, setDaysElement] = useState<daysElementState>({
     days: [],
@@ -155,6 +148,20 @@ const Calender: React.FC<CalendarProps> = ({
     if (!firstLoad) dispatch({ type: "CLEAR_CLICK" });
   };
 
+  const handleClick = (index: number, item: dayElement) => {
+    if (!item.active) return;
+
+    dispatch({
+      type: "UPDATE_DATE_CLICK",
+      payload: { index: index, nowRoute: nowRoute },
+    });
+
+    clickDetect = true;
+    const str: string = `${date.currYear} ${date.currMonth + 1} ${item.day}`;
+    onTodayDataChange({ detect: clickDetect, date: str });
+    clickDetect = false;
+  };
+
   const handlePrevNextBtnClick = (data: number) => {
     setClientPage(data);
   };
@@ -185,12 +192,24 @@ const Calender: React.FC<CalendarProps> = ({
     onPageChange(page);
   };
 
+  const adminCalendarRender = () => {
+    if (mode === "SHOWRESERVED") {
+      dispatch({
+        type: "ADMIN_SHOWRESERVED",
+      });
+    }
+    if (mode === "ARRANGE") {
+      renderCalendar();
+    }
+  };
+
   useEffect(() => {
     renderCalendar();
     if (firstLoad) {
-      onTodayDataChange(
-        `${date.currYear} ${date.currMonth + 1} ${date.currDate}`
-      );
+      onTodayDataChange({
+        detect: false,
+        date: `${date.currYear} ${date.currMonth + 1} ${date.currDate}`,
+      });
       setFirstLoad(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -205,7 +224,12 @@ const Calender: React.FC<CalendarProps> = ({
   }, [nowDate]);
 
   useEffect(() => {
-    renderCalendar();
+    if (nowRoute === "reserve") {
+      renderCalendar();
+    }
+    if (nowRoute === "admin") {
+      adminCalendarRender();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientPage]);
 
@@ -215,8 +239,15 @@ const Calender: React.FC<CalendarProps> = ({
         type: "RESERVE_CLICK",
         payload: { data: fetchWorkTimeDatas },
       });
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchWorkTimeDatas]);
+
+  useEffect(() => {
+    if (nowRoute === "admin") {
+      adminCalendarRender();
+    }
+  }, [mode]);
 
   return (
     <div className="calendar">
@@ -263,22 +294,20 @@ const Calender: React.FC<CalendarProps> = ({
           })}
         </ul>
       )}
-      {/* arrange */}
-      {nowRoute === "arrange" && (
+      {/* admin */}
+      {nowRoute === "admin" && (
         <ul className="days">
           {state.days.map((item, index) => {
             return (
-              nowRoute === "arrange" && (
-                <li
-                  className={`day ${item.active ? "" : "inactive"} ${
-                    item.isToday ? "isToday" : ""
-                  } ${item.clicked ? "clicked" : ""}`}
-                  key={index}
-                  onClick={() => handleClick(index, item)}
-                >
-                  {item.day}
-                </li>
-              )
+              <li
+                className={`day ${item.active ? "" : "inactive"} ${
+                  item.isToday ? "isToday" : ""
+                } ${item.clicked ? "clicked" : ""}`}
+                key={index}
+                onClick={() => handleClick(index, item)}
+              >
+                {item.day}
+              </li>
             );
           })}
         </ul>

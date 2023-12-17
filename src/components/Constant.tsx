@@ -3,3 +3,8 @@ export const work = {
   off: -1,
   reserved: 0,
 };
+
+export interface CLickEvents {
+  detect: boolean;
+  date: string;
+}

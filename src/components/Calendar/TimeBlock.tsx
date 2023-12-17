@@ -1,21 +1,21 @@
 import { ReactElement, useState, useEffect, useReducer } from "react";
-import { arrangeReducer, arrangeDataInit } from "../Arrange/ArrangeNeeds";
+import { arrangeReducer, arrangeDataInit } from "../Admin/AdminCalNeeds";
 import { WorkTimeData } from "./CalenderNeeds";
-import { work } from "../Constant";
+import { work, CLickEvents } from "../Constant";
 import { timeBlockReducer, timeBlockInit } from "./TimeBlockNeeds";
 
 interface TimeBlockProps {
-  title: string;
+  clickEvents: CLickEvents;
   nowRoute: string;
-  arrangeState: boolean;
+  mode: string;
   fetchWorkTimeDatas: WorkTimeData[];
 }
 
-const TimeBlock = ({
-  title,
+const TimeBlock: React.FC<TimeBlockProps> = ({
+  clickEvents,
   fetchWorkTimeDatas,
   nowRoute,
-  arrangeState,
+  mode,
 }: TimeBlockProps): ReactElement => {
   const [firstLoad, setFirstLoad] = useState<boolean>(true);
   const [selectIndex, setSelectIndex] = useState<number>(-1);
@@ -39,7 +39,7 @@ const TimeBlock = ({
     arr[index] === work.on ? (arr[index] = work.off) : (arr[index] = work.on);
 
     // arrange
-    updateArrangeData(title, arr);
+    updateArrangeData(clickEvents.date, arr);
   };
 
   const getTodayString = (data: string) => {
@@ -71,18 +71,25 @@ const TimeBlock = ({
     setSelectIndex(index);
   };
 
-  // const firstLoadDayInactive = (fetchWorkTimeDatas: WorkTimeData[]) => {
-  //   fetchWorkTimeDatas.forEach((item) => {
-  //     if (item.date === timeBlockState.today[2]) {
-  //       item.workTime.every((s) => s === work.off) ? setToday([]) : null;
-  //     }
-  //   });
-  // };
+  const handleArrangeTableRander = () => {
+    timeBlockDispatch({
+      type: "CLEAN_TABLE",
+      payload: { str: "TODAY&WORKTABLE" },
+    });
+    mode === "ARRANGE"
+      ? timeBlockDispatch({
+          type: "Change_Mode",
+          payload: { str: mode },
+        })
+      : timeBlockDispatch({
+          type: "Change_Mode",
+          payload: { str: mode },
+        });
 
-  const handleSaveArrangeDate = () => {
-    if (arrangeState) {
-      console.log("save");
-    }
+    timeBlockDispatch({
+      type: "SET_DATA",
+      payload: { data: fetchWorkTimeDatas, nowRoute: nowRoute },
+    });
   };
 
   /* arrange reducer func  */
@@ -97,40 +104,76 @@ const TimeBlock = ({
   /* --------------------  */
 
   useEffect(() => {
-    getTodayString(title);
-    setSelectIndex(-1);
-    timeBlockDispatch({
-      type: "SET_DATA",
-      payload: { data: fetchWorkTimeDatas },
-    });
+    if (clickEvents.detect) {
+      // console.log("get it");
+    }
 
+    getTodayString(clickEvents.date);
+    setSelectIndex(-1);
+
+    if (nowRoute === "reserve") {
+      timeBlockDispatch({
+        type: "SET_DATA",
+        payload: { data: fetchWorkTimeDatas, nowRoute: nowRoute },
+      });
+    }
+
+    if (nowRoute === "admin") {
+      timeBlockState.mode.showReserved
+        ? timeBlockDispatch({
+            type: "CLEAN_TABLE",
+            payload: { str: "WORKTABLE" },
+          })
+        : timeBlockDispatch({
+            type: "SET_DATA",
+            payload: { data: fetchWorkTimeDatas, nowRoute: nowRoute },
+          });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title]);
+  }, [clickEvents]);
 
   useEffect(() => {
+    // change page
     if (fetchWorkTimeDatas[0].date === "" || fetchWorkTimeDatas[0].yymm === "")
       return;
     LoadTimeData(fetchWorkTimeDatas);
 
-    if (firstLoad) {
-      timeBlockDispatch({
-        type: "SET_DATA",
-        payload: { data: fetchWorkTimeDatas },
-      });
-    } else {
-      timeBlockDispatch({
-        type: "CLEAN_TABLE",
-      });
+    if (nowRoute === "reserve") {
+      if (firstLoad) {
+        timeBlockDispatch({
+          type: "SET_DATA",
+          payload: { data: fetchWorkTimeDatas, nowRoute: nowRoute },
+        });
+      } else {
+        timeBlockDispatch({
+          type: "CLEAN_TABLE",
+          payload: { str: "TODAY&WORKTABLE" },
+        });
+      }
     }
 
+    if (nowRoute === "admin") {
+      if (firstLoad) {
+        timeBlockDispatch({
+          type: "SET_DATA",
+          payload: { data: fetchWorkTimeDatas, nowRoute: nowRoute },
+        });
+      } else {
+        timeBlockDispatch({
+          type: "CLEAN_TABLE",
+          payload: { str: "TODAY&WORKTABLE" },
+        });
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchWorkTimeDatas]);
 
   useEffect(() => {
-    if (nowRoute !== "arrange") return;
-    handleSaveArrangeDate();
+    if (nowRoute === "admin") {
+      handleArrangeTableRander();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [arrangeState]);
+  }, [mode]);
 
   return (
     <div className="flex justify-center flex-col items-center">
@@ -166,8 +209,8 @@ const TimeBlock = ({
               })}
             </div>
           )}
-          {/* arrange */}
-          {nowRoute === "arrange" && (
+          {/* admin */}
+          {nowRoute === "admin" && (
             <div className="select-block">
               {timeBlockState.workTime.map((state, i) => {
                 return (

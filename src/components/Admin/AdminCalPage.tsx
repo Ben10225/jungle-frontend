@@ -4,12 +4,7 @@ import TimeBlock from "../Calendar/TimeBlock";
 import { useState, useEffect } from "react";
 import { ENDPOINT } from "../../App";
 import { WorkTimeData } from "../Calendar/CalenderNeeds";
-
-// interface Data {
-//   yymm: string;
-//   date: string;
-//   workTimeData: number[];
-// }
+import { CLickEvents } from "../Constant";
 
 interface ResData {
   result: {
@@ -18,10 +13,14 @@ interface ResData {
   };
 }
 
-const ArrangePage = () => {
-  const nowRoute = "arrange";
-  const [dataFromCalendar, setDataFromCalendar] = useState<string>("");
+const AdminCalPage: React.FC = () => {
+  const nowRoute = "admin";
   const [isChecked, setChecked] = useState(false);
+  const [mode, setMode] = useState<string>("SHOWRESERVED");
+  const [dataFromCalendar, setDataFromCalendar] = useState<CLickEvents>({
+    detect: false,
+    date: "",
+  });
   const [forChildSureData, setForChildSureData] = useState<WorkTimeData[]>([
     { yymm: "", date: "", workTime: [] },
   ]);
@@ -44,7 +43,7 @@ const ArrangePage = () => {
     },
   });
 
-  const handleTodayDataChange = (data: string) => {
+  const handleTodayDataChange = (data: CLickEvents) => {
     setDataFromCalendar(data);
   };
 
@@ -55,10 +54,10 @@ const ArrangePage = () => {
   };
 
   const getNextMonth = () => {
-    let yy = dataFromCalendar.split(" ")[1];
-    let mm = dataFromCalendar.split(" ")[2];
-    if (dataFromCalendar.split(" ")[1] === "12") {
-      yy = (parseInt(dataFromCalendar.split(" ")[0]) + 1).toString();
+    let yy = dataFromCalendar.date.split(" ")[1];
+    let mm = dataFromCalendar.date.split(" ")[2];
+    if (dataFromCalendar.date.split(" ")[1] === "12") {
+      yy = (parseInt(dataFromCalendar.date.split(" ")[0]) + 1).toString();
       mm = "1";
     }
 
@@ -67,6 +66,11 @@ const ArrangePage = () => {
 
   const handleCheckboxChange = () => {
     setChecked(!isChecked);
+    if (!isChecked) {
+      setMode("ARRANGE");
+    } else {
+      setMode("SHOWRESERVED");
+    }
   };
 
   const handleUpdateArrangeData = () => {
@@ -74,11 +78,16 @@ const ArrangePage = () => {
   };
 
   useEffect(() => {
-    if (sureTimeData.result.thisMonth[0].yymm !== "" || dataFromCalendar === "")
+    if (
+      sureTimeData.result.thisMonth[0].yymm !== "" ||
+      dataFromCalendar.date === ""
+    )
       return;
 
     const thisMonth =
-      dataFromCalendar.split(" ")[0] + "-" + dataFromCalendar.split(" ")[1];
+      dataFromCalendar.date.split(" ")[0] +
+      "-" +
+      dataFromCalendar.date.split(" ")[1];
     const nextMonth = getNextMonth();
     const fetchData = async () => {
       try {
@@ -113,22 +122,23 @@ const ArrangePage = () => {
               onPageChange={handlePageChange}
               fetchWorkTimeDatas={forChildSureData}
               nowRoute={nowRoute}
+              mode={mode}
             />
             <TimeBlock
-              title={dataFromCalendar}
+              clickEvents={dataFromCalendar}
               fetchWorkTimeDatas={forChildSureData}
               nowRoute={nowRoute}
-              arrangeState={isChecked}
+              mode={mode}
             />
             <input
               type="checkbox"
               checked={isChecked}
               onChange={handleCheckboxChange}
-              className="w-6 h-6 left-5 top-5 relative"
+              className="w-6 h-6 left-12 top-12 relative"
             />
             <button
               type="button"
-              className="relative top-5 left-10 text-white bg-blue-700 outline-none font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600"
+              className="relative top-10 left-20 text-white bg-blue-700 outline-none font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600"
               onClick={() => handleUpdateArrangeData()}
             >
               update data
@@ -140,4 +150,4 @@ const ArrangePage = () => {
   );
 };
 
-export default ArrangePage;
+export default AdminCalPage;

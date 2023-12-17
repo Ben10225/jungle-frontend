@@ -30,19 +30,13 @@ const PrevNextBtn = ({
 
   const handlePrevNextIcon = (e: React.MouseEvent<HTMLSpanElement>) => {
     const targetButton = e.target as HTMLButtonElement;
-    if (nowRoute === "reserve") {
-      if (
-        (clientPage === 0 && targetButton.id === "prev") ||
-        (clientPage === 1 && targetButton.id === "next")
-      )
-        return;
-    } else if (nowRoute === "arrange") {
-      if (
-        (clientPage === 0 && targetButton.id === "prev") ||
-        (clientPage === 2 && targetButton.id === "next")
-      )
-        return;
-    }
+    const n = nowRoute === "reserve" ? 1 : 2;
+
+    if (
+      (clientPage === 0 && targetButton.id === "prev") ||
+      (clientPage === n && targetButton.id === "next")
+    )
+      return;
 
     let page = clientPage;
     let nowMonth = date.currMonth;
@@ -92,7 +86,7 @@ const PrevNextBtn = ({
           </span>
         </>
       )}
-      {nowRoute === "arrange" && (
+      {nowRoute === "admin" && (
         <>
           <span
             ref={prevIcon}

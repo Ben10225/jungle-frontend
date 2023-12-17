@@ -6,6 +6,10 @@ interface timeBlockData {
   date: string;
   workTime: number[];
   today: string[];
+  mode: {
+    showReserved: boolean;
+    arrange: boolean;
+  };
 }
 
 interface UpdateDateAction {
@@ -15,11 +19,12 @@ interface UpdateDateAction {
 
 interface SetDataAcrion {
   type: "SET_DATA";
-  payload: { data: WorkTimeData[] };
+  payload: { data: WorkTimeData[]; nowRoute: string };
 }
 
 interface CleanTableAction {
   type: "CLEAN_TABLE";
+  payload: { str: string };
 }
 
 interface SetToday {
@@ -27,7 +32,17 @@ interface SetToday {
   payload: { today: string[] };
 }
 
-type Action = UpdateDateAction | SetDataAcrion | CleanTableAction | SetToday;
+interface ChangeMode {
+  type: "Change_Mode";
+  payload: { str: string };
+}
+
+type Action =
+  | UpdateDateAction
+  | SetDataAcrion
+  | CleanTableAction
+  | SetToday
+  | ChangeMode;
 
 export const timeBlockReducer = (state: timeBlockData, action: Action) => {
   switch (action.type) {
@@ -43,14 +58,29 @@ export const timeBlockReducer = (state: timeBlockData, action: Action) => {
         }),
       };
     case "SET_DATA": {
+      if (action.payload.nowRoute === "reserve" && state.today[0] === "") {
+        return {
+          ...state,
+          workTime: [],
+        };
+      }
+      if (
+        action.payload.nowRoute === "admin" &&
+        (state.mode.showReserved || state.today.length === 0)
+      ) {
+        return {
+          ...state,
+          workTime: [],
+        };
+      }
       const todayString =
         state.today[0] + "-" + state.today[1] + state.today[2];
-      const matchingItem = action.payload.data.find((item) => {
-        if (todayString === item.yymm + item.date) {
-          // console.log(todayString);
-        }
-        return todayString === item.yymm + item.date;
-      });
+      const matchingItem = action.payload.data.find(
+        (item) => todayString === item.yymm + item.date
+      );
+
+      if (action.payload.nowRoute === "admin") {
+      }
       return {
         ...state,
         workTime: matchingItem
@@ -59,15 +89,37 @@ export const timeBlockReducer = (state: timeBlockData, action: Action) => {
       };
     }
     case "CLEAN_TABLE":
-      return {
-        ...state,
-        workTime: [],
-        today: [],
-      };
+      if (action.payload.str === "TODAY&WORKTABLE") {
+        return {
+          ...state,
+          workTime: [],
+          today: [],
+        };
+      } else {
+        return {
+          ...state,
+          workTime: [],
+        };
+      }
+
     case "SET_TODAY": {
       return {
         ...state,
         today: action.payload.today,
+      };
+    }
+    case "Change_Mode": {
+      const m =
+        action.payload.str === "SHOWRESERVED"
+          ? {
+              showReserved: true,
+              arrange: false,
+            }
+          : { showReserved: false, arrange: true };
+
+      return {
+        ...state,
+        mode: m,
       };
     }
     default:
@@ -80,4 +132,8 @@ export const timeBlockInit: timeBlockData = {
   date: "",
   workTime: [],
   today: [],
+  mode: {
+    showReserved: true,
+    arrange: false,
+  },
 };

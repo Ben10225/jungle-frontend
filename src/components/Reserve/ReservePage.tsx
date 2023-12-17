@@ -4,6 +4,7 @@ import TimeBlock from "../Calendar/TimeBlock";
 import { useState, useEffect } from "react";
 import { ENDPOINT } from "../../App";
 import { WorkTimeData } from "../Calendar/CalenderNeeds";
+import { CLickEvents } from "../Constant";
 
 interface ResData {
   result: {
@@ -12,9 +13,12 @@ interface ResData {
   };
 }
 
-const ReservePage = () => {
+const ReservePage: React.FC = () => {
   const nowRoute = "reserve";
-  const [dataFromCalendar, setDataFromCalendar] = useState<string>("");
+  const [dataFromCalendar, setDataFromCalendar] = useState<CLickEvents>({
+    detect: false,
+    date: "",
+  });
   const [forChildSureData, setForChildSureData] = useState<WorkTimeData[]>([
     { yymm: "", date: "", workTime: [] },
   ]);
@@ -37,23 +41,22 @@ const ReservePage = () => {
     },
   });
 
-  const handleTodayDataChange = (data: string) => {
+  const handleTodayDataChange = (data: CLickEvents) => {
     setDataFromCalendar(data);
-    console.log("here");
   };
 
   const handlePageChange = (page: number) => {
     page === 1
       ? setForChildSureData(sureTimeData.result.nextMonth)
       : setForChildSureData(sureTimeData.result.thisMonth);
-    setDataFromCalendar("");
+    setDataFromCalendar({ detect: false, date: "" });
   };
 
   const getNextMonth = () => {
-    let yy = dataFromCalendar.split(" ")[1];
-    let mm = dataFromCalendar.split(" ")[2];
-    if (dataFromCalendar.split(" ")[1] === "12") {
-      yy = (parseInt(dataFromCalendar.split(" ")[0]) + 1).toString();
+    let yy = dataFromCalendar.date.split(" ")[1];
+    let mm = dataFromCalendar.date.split(" ")[2];
+    if (dataFromCalendar.date.split(" ")[1] === "12") {
+      yy = (parseInt(dataFromCalendar.date.split(" ")[0]) + 1).toString();
       mm = "1";
     }
 
@@ -61,11 +64,16 @@ const ReservePage = () => {
   };
 
   useEffect(() => {
-    if (sureTimeData.result.thisMonth[0].yymm !== "" || dataFromCalendar === "")
+    if (
+      sureTimeData.result.thisMonth[0].yymm !== "" ||
+      dataFromCalendar.date === ""
+    )
       return;
 
     const thisMonth =
-      dataFromCalendar.split(" ")[0] + "-" + dataFromCalendar.split(" ")[1];
+      dataFromCalendar.date.split(" ")[0] +
+      "-" +
+      dataFromCalendar.date.split(" ")[1];
     const nextMonth = getNextMonth();
     const fetchData = async () => {
       try {
@@ -101,12 +109,13 @@ const ReservePage = () => {
               onPageChange={handlePageChange}
               fetchWorkTimeDatas={forChildSureData}
               nowRoute={nowRoute}
+              mode={""}
             />
             <TimeBlock
-              title={dataFromCalendar}
+              clickEvents={dataFromCalendar}
               fetchWorkTimeDatas={forChildSureData}
               nowRoute={nowRoute}
-              arrangeState={false}
+              mode={""}
             />
           </div>
         </div>
