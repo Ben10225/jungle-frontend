@@ -1,15 +1,18 @@
 import { work } from "../Constant";
 import { WorkTimeData } from "./CalenderNeeds";
+import _ from "lodash";
 
 interface timeBlockData {
-  yymm: string;
-  date: string;
+  // yymm: string;
+  // date: string;
   workTime: number[];
   today: string[];
   mode: {
     showReserved: boolean;
     arrange: boolean;
   };
+  origin: WorkTimeData[];
+  storage: WorkTimeData[];
 }
 
 interface UpdateDateAction {
@@ -19,7 +22,10 @@ interface UpdateDateAction {
 
 interface SetDataAcrion {
   type: "SET_DATA";
-  payload: { data: WorkTimeData[]; nowRoute: string };
+  payload: {
+    data: WorkTimeData[];
+    nowRoute: string;
+  };
 }
 
 interface CleanTableAction {
@@ -27,26 +33,62 @@ interface CleanTableAction {
   payload: { str: string };
 }
 
-interface SetToday {
+interface SetTodayAction {
   type: "SET_TODAY";
   payload: { today: string[] };
 }
 
+interface SaveDataAction {
+  type: "SAVE_DATA";
+  payload: { data: WorkTimeData[]; nowRoute: string };
+}
+
 interface ChangeMode {
-  type: "Change_Mode";
+  type: "CHANGE_MODE";
   payload: { str: string };
+}
+
+interface UploadResetData {
+  type: "UPLOAD_RESET_DATA";
 }
 
 type Action =
   | UpdateDateAction
   | SetDataAcrion
   | CleanTableAction
-  | SetToday
-  | ChangeMode;
+  | SetTodayAction
+  | SaveDataAction
+  | ChangeMode
+  | UploadResetData;
 
 export const timeBlockReducer = (state: timeBlockData, action: Action) => {
   switch (action.type) {
-    case "UPDATE_ITEM":
+    case "UPDATE_ITEM": {
+      // update storage
+
+      const tmpData: WorkTimeData = {
+        date: state.today[2],
+        yymm: state.today[0] + "-" + state.today[1],
+        workTime: [...state.workTime],
+      };
+      tmpData.workTime.forEach((n, i) => {
+        if (i === action.payload.index) {
+          tmpData.workTime[i] = n === 1 ? -1 : 1;
+        }
+      });
+      let pushData = false;
+      const tmpStorage = state.storage.map((data) => {
+        if (data.yymm === tmpData.yymm && data.date === tmpData.date) {
+          data.workTime = tmpData.workTime;
+          pushData = true;
+        }
+        return data;
+      });
+
+      if (!pushData) {
+        tmpStorage.push(tmpData);
+      }
+
       return {
         ...state,
         workTime: state.workTime.map((st, i) => {
@@ -56,31 +98,100 @@ export const timeBlockReducer = (state: timeBlockData, action: Action) => {
             return st;
           }
         }),
+        storage: [...tmpStorage],
       };
+    }
     case "SET_DATA": {
-      if (action.payload.nowRoute === "reserve" && state.today[0] === "") {
+      // reserve
+      if (action.payload.nowRoute === "reserve") {
+        if (state.today[0] === "" || action.payload.data[0].date === "") {
+          {
+            return {
+              ...state,
+              workTime: [],
+            };
+          }
+        }
+        const todayString =
+          state.today[0] + "-" + state.today[1] + state.today[2];
+        const matchingItem = action.payload.data.find(
+          (item) => todayString === item.yymm + item.date
+        );
+
+        if (
+          matchingItem === undefined ||
+          matchingItem.workTime.every((i) => i === -1)
+        ) {
+          return {
+            ...state,
+            today: [],
+          };
+        }
+
+        return {
+          ...state,
+          workTime: matchingItem
+            ? matchingItem.workTime
+            : [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+        };
+      }
+
+      // admin
+      if (state.mode.showReserved) {
+        return {
+          ...state,
+          workTime: [],
+        };
+      } else if (state.today.length === 0) {
+        if (state.storage.length > 0) {
+          if (!_.isEqual(action.payload.data, state.storage)) {
+            const tmp: WorkTimeData[] = _.cloneDeep(state.storage);
+            const existIndex: number[] = [];
+
+            state.storage.forEach((item, index) => {
+              for (let i = 0; i < action.payload.data.length; i++) {
+                if (
+                  item.yymm === action.payload.data[i].yymm &&
+                  item.date === action.payload.data[i].date
+                ) {
+                  tmp[index] = item;
+                  existIndex.push(i);
+                  break;
+                }
+              }
+            });
+            action.payload.data.forEach((item, i) => {
+              if (!existIndex.includes(i)) {
+                tmp.push(item);
+              }
+            });
+
+            return {
+              ...state,
+              storage: _.cloneDeep(tmp),
+            };
+          }
+        }
         return {
           ...state,
           workTime: [],
         };
       }
-      if (
-        action.payload.nowRoute === "admin" &&
-        (state.mode.showReserved || state.today.length === 0)
-      ) {
+
+      if (state.storage === null) {
         return {
           ...state,
-          workTime: [],
+          workTime: [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
         };
       }
+
       const todayString =
         state.today[0] + "-" + state.today[1] + state.today[2];
-      const matchingItem = action.payload.data.find(
+
+      const matchingItem = state.storage.find(
         (item) => todayString === item.yymm + item.date
       );
 
-      if (action.payload.nowRoute === "admin") {
-      }
       return {
         ...state,
         workTime: matchingItem
@@ -108,7 +219,14 @@ export const timeBlockReducer = (state: timeBlockData, action: Action) => {
         today: action.payload.today,
       };
     }
-    case "Change_Mode": {
+    case "SAVE_DATA": {
+      return {
+        ...state,
+        origin: _.cloneDeep(action.payload.data),
+        storage: _.cloneDeep(action.payload.data),
+      };
+    }
+    case "CHANGE_MODE": {
       const m =
         action.payload.str === "SHOWRESERVED"
           ? {
@@ -116,10 +234,15 @@ export const timeBlockReducer = (state: timeBlockData, action: Action) => {
               arrange: false,
             }
           : { showReserved: false, arrange: true };
-
       return {
         ...state,
         mode: m,
+      };
+    }
+    case "UPLOAD_RESET_DATA": {
+      return {
+        ...state,
+        origin: _.cloneDeep(state.storage),
       };
     }
     default:
@@ -128,12 +251,14 @@ export const timeBlockReducer = (state: timeBlockData, action: Action) => {
 };
 
 export const timeBlockInit: timeBlockData = {
-  yymm: "",
-  date: "",
+  // yymm: "",
+  // date: "",
   workTime: [],
   today: [],
   mode: {
     showReserved: true,
     arrange: false,
   },
+  origin: [],
+  storage: [],
 };

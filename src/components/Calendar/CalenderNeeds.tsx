@@ -51,7 +51,6 @@ interface ReserveClickAction {
 
 interface AdminShowReservedAction {
   type: "ADMIN_SHOWRESERVED";
-  // payload: { data: WorkTimeData[] };
 }
 
 export type Action =
@@ -98,6 +97,7 @@ export const reducer = (state: daysElementState, action: Action) => {
           ...state,
         };
       }
+
       const allFalseArr: number[] = [];
       action.payload.data.forEach((item) => {
         item.workTime.every((state) => state === work.off)
@@ -105,8 +105,17 @@ export const reducer = (state: daysElementState, action: Action) => {
           : null;
       });
 
+      const td = state.days.find((i) => i.isToday);
+      const todayAllOff = allFalseArr.some((d) => d === td?.day);
+      const todayDataExists = action.payload.data.some(
+        (d) => parseInt(d.date) === td?.day
+      );
+
       const tmp = state.days.map((item) => {
         if (item.active) {
+          if ((todayAllOff || !todayDataExists) && item.isToday) {
+            item.clicked = false;
+          }
           for (let i = 0; i < action.payload.data.length; i++) {
             item.active = false;
             if (action.payload.data[i].date === item.day.toString()) {

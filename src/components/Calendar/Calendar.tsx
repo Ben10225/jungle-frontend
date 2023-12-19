@@ -194,6 +194,7 @@ const Calender: React.FC<CalendarProps> = ({
 
   const adminCalendarRender = () => {
     if (mode === "SHOWRESERVED") {
+      renderCalendar();
       dispatch({
         type: "ADMIN_SHOWRESERVED",
       });
@@ -251,7 +252,7 @@ const Calender: React.FC<CalendarProps> = ({
 
   return (
     <div className="calendar">
-      <header className="flex items-center justify-between p-4 mb-2">
+      <header className="flex items-center justify-between p-5 mb-1">
         <div>
           <span className="title-year">{date.currYear}</span>
           <span className="title-month">{months[date.currMonth]}</span>
@@ -267,7 +268,7 @@ const Calender: React.FC<CalendarProps> = ({
           onPageChange={handlePageChange}
         />
       </header>
-      <ul className="weeks">
+      <ul className="weeks mb-2">
         <li>Sun</li>
         <li>Mon</li>
         <li>Tue</li>

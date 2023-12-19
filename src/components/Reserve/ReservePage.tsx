@@ -4,7 +4,7 @@ import TimeBlock from "../Calendar/TimeBlock";
 import { useState, useEffect } from "react";
 import { ENDPOINT } from "../../App";
 import { WorkTimeData } from "../Calendar/CalenderNeeds";
-import { CLickEvents } from "../Constant";
+import { CLickEvents, getMonthUrlQuery } from "../Constant";
 
 interface ResData {
   result: {
@@ -52,17 +52,6 @@ const ReservePage: React.FC = () => {
     setDataFromCalendar({ detect: false, date: "" });
   };
 
-  const getNextMonth = () => {
-    let yy = dataFromCalendar.date.split(" ")[1];
-    let mm = dataFromCalendar.date.split(" ")[2];
-    if (dataFromCalendar.date.split(" ")[1] === "12") {
-      yy = (parseInt(dataFromCalendar.date.split(" ")[0]) + 1).toString();
-      mm = "1";
-    }
-
-    return yy + "-" + mm;
-  };
-
   useEffect(() => {
     if (
       sureTimeData.result.thisMonth[0].yymm !== "" ||
@@ -70,19 +59,17 @@ const ReservePage: React.FC = () => {
     )
       return;
 
-    const thisMonth =
-      dataFromCalendar.date.split(" ")[0] +
-      "-" +
-      dataFromCalendar.date.split(" ")[1];
-    const nextMonth = getNextMonth();
+    const yy = dataFromCalendar.date.split(" ")[0];
+    const mm = dataFromCalendar.date.split(" ")[1];
+    const thisMonth = yy + "-" + mm;
+    const nextMonth = getMonthUrlQuery(parseInt(yy), parseInt(mm) + 1);
+
     const fetchData = async () => {
       try {
-        const response = await axios.post<ResData>(`${ENDPOINT}/available`, {
-          thisMonth: thisMonth,
-          nextMonth: nextMonth,
-        });
+        const response = await axios.get<ResData>(
+          `${ENDPOINT}/available?r=${nowRoute}&thisMonth=${thisMonth}&nextMonth=${nextMonth}`
+        );
 
-        // console.log(response.data.result);
         setSureTimeData({
           result: {
             thisMonth: response.data.result.thisMonth,
@@ -90,7 +77,6 @@ const ReservePage: React.FC = () => {
           },
         });
         setForChildSureData(response.data.result.thisMonth);
-        // setSureTimeData(response.data.result.thisMonth);
       } catch (error) {
         console.log(error);
       }
@@ -112,6 +98,8 @@ const ReservePage: React.FC = () => {
               mode={""}
             />
             <TimeBlock
+              onUpdateWorkTime={() => {}}
+              updateBtnClick={false}
               clickEvents={dataFromCalendar}
               fetchWorkTimeDatas={forChildSureData}
               nowRoute={nowRoute}

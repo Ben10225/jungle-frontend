@@ -1,14 +1,17 @@
 import { ReactElement, useState, useEffect, useReducer } from "react";
-import { arrangeReducer, arrangeDataInit } from "../Admin/AdminCalNeeds";
+// import { arrangeReducer, arrangeDataInit } from "../Admin/AdminCalNeeds";
 import { WorkTimeData } from "./CalenderNeeds";
 import { work, CLickEvents } from "../Constant";
 import { timeBlockReducer, timeBlockInit } from "./TimeBlockNeeds";
+import _ from "lodash";
 
 interface TimeBlockProps {
   clickEvents: CLickEvents;
   nowRoute: string;
   mode: string;
   fetchWorkTimeDatas: WorkTimeData[];
+  updateBtnClick: boolean;
+  onUpdateWorkTime: (oldData: WorkTimeData[], newData: WorkTimeData[]) => void;
 }
 
 const TimeBlock: React.FC<TimeBlockProps> = ({
@@ -16,6 +19,8 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
   fetchWorkTimeDatas,
   nowRoute,
   mode,
+  updateBtnClick,
+  onUpdateWorkTime,
 }: TimeBlockProps): ReactElement => {
   const [firstLoad, setFirstLoad] = useState<boolean>(true);
   const [selectIndex, setSelectIndex] = useState<number>(-1);
@@ -23,10 +28,6 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
   const [timeBlockState, timeBlockDispatch] = useReducer(
     timeBlockReducer,
     timeBlockInit
-  );
-  const [arrangeDataState, arrangeDataDispatch] = useReducer(
-    arrangeReducer,
-    arrangeDataInit
   );
 
   const handleArrangePeriodClick = (newValue: number, index: number) => {
@@ -37,9 +38,6 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
 
     const arr: number[] = [...timeBlockState.workTime];
     arr[index] === work.on ? (arr[index] = work.off) : (arr[index] = work.on);
-
-    // arrange
-    updateArrangeData(clickEvents.date, arr);
   };
 
   const getTodayString = (data: string) => {
@@ -50,24 +48,7 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
     });
   };
 
-  const LoadTimeData = (res: WorkTimeData[]) => {
-    if (res === null) return;
-
-    const t: string = `${new Date().getFullYear()}-${
-      new Date().getMonth() + 1
-    }${new Date().getDate()}`;
-
-    res.find((item) => {
-      const d: string = item.yymm + item.date;
-
-      if (d === t && firstLoad) {
-        setFirstLoad(false);
-      }
-    });
-  };
-
   const handleReserveClickPeriod = (index: number) => {
-    // console.log("date:", title, "time:", index + 10);
     setSelectIndex(index);
   };
 
@@ -78,11 +59,11 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
     });
     mode === "ARRANGE"
       ? timeBlockDispatch({
-          type: "Change_Mode",
+          type: "CHANGE_MODE",
           payload: { str: mode },
         })
       : timeBlockDispatch({
-          type: "Change_Mode",
+          type: "CHANGE_MODE",
           payload: { str: mode },
         });
 
@@ -91,17 +72,6 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
       payload: { data: fetchWorkTimeDatas, nowRoute: nowRoute },
     });
   };
-
-  /* arrange reducer func  */
-
-  const updateArrangeData = (str: string, update: number[]) => {
-    arrangeDataDispatch({
-      type: "UPDATE_DATA",
-      payload: { str: str, update: update },
-    });
-  };
-
-  /* --------------------  */
 
   useEffect(() => {
     if (clickEvents.detect) {
@@ -114,7 +84,10 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
     if (nowRoute === "reserve") {
       timeBlockDispatch({
         type: "SET_DATA",
-        payload: { data: fetchWorkTimeDatas, nowRoute: nowRoute },
+        payload: {
+          data: fetchWorkTimeDatas,
+          nowRoute: nowRoute,
+        },
       });
     }
 
@@ -126,7 +99,10 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
           })
         : timeBlockDispatch({
             type: "SET_DATA",
-            payload: { data: fetchWorkTimeDatas, nowRoute: nowRoute },
+            payload: {
+              data: fetchWorkTimeDatas,
+              nowRoute: nowRoute,
+            },
           });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -134,15 +110,21 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
 
   useEffect(() => {
     // change page
-    if (fetchWorkTimeDatas[0].date === "" || fetchWorkTimeDatas[0].yymm === "")
+    if (
+      fetchWorkTimeDatas &&
+      (fetchWorkTimeDatas[0].date === "" || fetchWorkTimeDatas[0].yymm === "")
+    )
       return;
-    LoadTimeData(fetchWorkTimeDatas);
 
+    // LoadTimeData(fetchWorkTimeDatas);
     if (nowRoute === "reserve") {
       if (firstLoad) {
         timeBlockDispatch({
           type: "SET_DATA",
-          payload: { data: fetchWorkTimeDatas, nowRoute: nowRoute },
+          payload: {
+            data: fetchWorkTimeDatas,
+            nowRoute: nowRoute,
+          },
         });
       } else {
         timeBlockDispatch({
@@ -156,6 +138,13 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
       if (firstLoad) {
         timeBlockDispatch({
           type: "SET_DATA",
+          payload: {
+            data: fetchWorkTimeDatas,
+            nowRoute: nowRoute,
+          },
+        });
+        timeBlockDispatch({
+          type: "SAVE_DATA",
           payload: { data: fetchWorkTimeDatas, nowRoute: nowRoute },
         });
       } else {
@@ -163,8 +152,17 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
           type: "CLEAN_TABLE",
           payload: { str: "TODAY&WORKTABLE" },
         });
+        timeBlockDispatch({
+          type: "SET_DATA",
+          payload: {
+            data: fetchWorkTimeDatas,
+            nowRoute: nowRoute,
+          },
+        });
       }
     }
+
+    if (firstLoad) setFirstLoad(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchWorkTimeDatas]);
 
@@ -174,6 +172,18 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
+
+  useEffect(() => {
+    if (updateBtnClick) {
+      if (!_.isEqual(timeBlockState.origin, timeBlockState.storage)) {
+        onUpdateWorkTime(timeBlockState.origin, timeBlockState.storage);
+        timeBlockDispatch({
+          type: "UPLOAD_RESET_DATA",
+        });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [updateBtnClick]);
 
   return (
     <div className="flex justify-center flex-col items-center">
@@ -210,7 +220,7 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
             </div>
           )}
           {/* admin */}
-          {nowRoute === "admin" && (
+          {nowRoute === "admin" && mode === "ARRANGE" && (
             <div className="select-block">
               {timeBlockState.workTime.map((state, i) => {
                 return (
