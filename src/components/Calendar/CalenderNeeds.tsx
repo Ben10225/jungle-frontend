@@ -1,4 +1,5 @@
 import { work } from "../Constant";
+import _ from "lodash";
 
 export interface dayElement {
   day: number;
@@ -91,13 +92,26 @@ export const reducer = (state: daysElementState, action: Action) => {
         }),
       };
     case "RESERVE_CLICK": {
-      const dt = action.payload.data;
-      if (dt.length === 1 && dt[0].yymm === "" && dt[0].yymm === "") {
+      // no data
+      if (
+        action.payload.data.length === 0 ||
+        (action.payload.data.length === 1 &&
+          action.payload.data[0].yymm === "" &&
+          action.payload.data[0].yymm === "")
+      ) {
+        const tmp: dayElement[] = _.cloneDeep(state.days);
+        tmp.forEach((item) => {
+          item.active = false;
+          item.clicked = false;
+        });
+
         return {
           ...state,
+          days: tmp,
         };
       }
 
+      // get all -1 workTime
       const allFalseArr: number[] = [];
       action.payload.data.forEach((item) => {
         item.workTime.every((state) => state === work.off)
@@ -105,13 +119,20 @@ export const reducer = (state: daysElementState, action: Action) => {
           : null;
       });
 
+      // today data exist
       const td = state.days.find((i) => i.isToday);
       const todayAllOff = allFalseArr.some((d) => d === td?.day);
       const todayDataExists = action.payload.data.some(
         (d) => parseInt(d.date) === td?.day
       );
 
+      let lastMonthDay = true;
       const tmp = state.days.map((item) => {
+        if (item.day === 1) lastMonthDay = false;
+        if (lastMonthDay) {
+          item.active = false;
+          return item;
+        }
         if (item.active) {
           if ((todayAllOff || !todayDataExists) && item.isToday) {
             item.clicked = false;
@@ -119,6 +140,16 @@ export const reducer = (state: daysElementState, action: Action) => {
           for (let i = 0; i < action.payload.data.length; i++) {
             item.active = false;
             if (action.payload.data[i].date === item.day.toString()) {
+              item.active = true;
+              break;
+            }
+          }
+        } else {
+          for (let i = 0; i < action.payload.data.length; i++) {
+            if (item.day.toString() === action.payload.data[i].date) {
+              if (item.isToday) {
+                item.clicked = true;
+              }
               item.active = true;
               break;
             }

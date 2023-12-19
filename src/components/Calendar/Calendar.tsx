@@ -205,12 +205,18 @@ const Calender: React.FC<CalendarProps> = ({
   };
 
   useEffect(() => {
-    renderCalendar();
+    // renderCalendar();
     if (firstLoad) {
       onTodayDataChange({
         detect: false,
         date: `${date.currYear} ${date.currMonth + 1} ${date.currDate}`,
       });
+      if (nowRoute === "reserve") {
+        dispatch({
+          type: "RESERVE_CLICK",
+          payload: { data: fetchWorkTimeDatas },
+        });
+      }
       setFirstLoad(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -227,6 +233,10 @@ const Calender: React.FC<CalendarProps> = ({
   useEffect(() => {
     if (nowRoute === "reserve") {
       renderCalendar();
+      dispatch({
+        type: "RESERVE_CLICK",
+        payload: { data: fetchWorkTimeDatas },
+      });
     }
     if (nowRoute === "admin") {
       adminCalendarRender();
@@ -240,7 +250,6 @@ const Calender: React.FC<CalendarProps> = ({
         type: "RESERVE_CLICK",
         payload: { data: fetchWorkTimeDatas },
       });
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchWorkTimeDatas]);
 
@@ -252,7 +261,7 @@ const Calender: React.FC<CalendarProps> = ({
 
   return (
     <div className="calendar">
-      <header className="flex items-center justify-between p-5 mb-1">
+      <header className="flex items-center justify-between p-5 mb-2">
         <div>
           <span className="title-year">{date.currYear}</span>
           <span className="title-month">{months[date.currMonth]}</span>

@@ -1,14 +1,15 @@
 import { ReactElement, useState, useEffect, useReducer } from "react";
-// import { arrangeReducer, arrangeDataInit } from "../Admin/AdminCalNeeds";
 import { WorkTimeData } from "./CalenderNeeds";
 import { work, CLickEvents } from "../Constant";
 import { timeBlockReducer, timeBlockInit } from "./TimeBlockNeeds";
+
 import _ from "lodash";
 
 interface TimeBlockProps {
   clickEvents: CLickEvents;
   nowRoute: string;
   mode: string;
+  page: number;
   fetchWorkTimeDatas: WorkTimeData[];
   updateBtnClick: boolean;
   onUpdateWorkTime: (oldData: WorkTimeData[], newData: WorkTimeData[]) => void;
@@ -19,6 +20,7 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
   fetchWorkTimeDatas,
   nowRoute,
   mode,
+  page,
   updateBtnClick,
   onUpdateWorkTime,
 }: TimeBlockProps): ReactElement => {
@@ -41,7 +43,14 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
   };
 
   const getTodayString = (data: string) => {
+    if (
+      nowRoute === "reserve" &&
+      (fetchWorkTimeDatas.length === 0 || fetchWorkTimeDatas[0].date === "")
+    )
+      return;
     const str: string[] = data.split(" ");
+
+    // console.log(str);
     timeBlockDispatch({
       type: "SET_TODAY",
       payload: { today: str },
@@ -57,15 +66,11 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
       type: "CLEAN_TABLE",
       payload: { str: "TODAY&WORKTABLE" },
     });
-    mode === "ARRANGE"
-      ? timeBlockDispatch({
-          type: "CHANGE_MODE",
-          payload: { str: mode },
-        })
-      : timeBlockDispatch({
-          type: "CHANGE_MODE",
-          payload: { str: mode },
-        });
+    // mode === "ARRANGE";
+    timeBlockDispatch({
+      type: "CHANGE_MODE",
+      payload: { str: mode },
+    });
 
     timeBlockDispatch({
       type: "SET_DATA",
@@ -74,10 +79,6 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
   };
 
   useEffect(() => {
-    if (clickEvents.detect) {
-      // console.log("get it");
-    }
-
     getTodayString(clickEvents.date);
     setSelectIndex(-1);
 
@@ -110,61 +111,104 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
 
   useEffect(() => {
     // change page
-    if (
-      fetchWorkTimeDatas &&
-      (fetchWorkTimeDatas[0].date === "" || fetchWorkTimeDatas[0].yymm === "")
-    )
-      return;
-
-    // LoadTimeData(fetchWorkTimeDatas);
     if (nowRoute === "reserve") {
-      if (firstLoad) {
-        timeBlockDispatch({
-          type: "SET_DATA",
-          payload: {
-            data: fetchWorkTimeDatas,
-            nowRoute: nowRoute,
-          },
-        });
-      } else {
-        timeBlockDispatch({
-          type: "CLEAN_TABLE",
-          payload: { str: "TODAY&WORKTABLE" },
-        });
-      }
+      // no data
+      if (fetchWorkTimeDatas.length === 0) return;
+
+      if (
+        fetchWorkTimeDatas[0].date === "" &&
+        fetchWorkTimeDatas[0].yymm === ""
+      )
+        return;
+
+      // if (firstLoad) {
+      // console.log("first");
+      // if (firstLoad) setFirstLoad(false);
+
+      getTodayString(clickEvents.date);
+      timeBlockDispatch({
+        type: "SET_DATA",
+        payload: {
+          data: fetchWorkTimeDatas,
+          nowRoute: nowRoute,
+        },
+      });
+      // } else {
+      // timeBlockDispatch({
+      //   type: "CLEAN_TABLE",
+      //   payload: { str: "TODAY&WORKTABLE" },
+      // });
+      // }
     }
 
     if (nowRoute === "admin") {
       if (firstLoad) {
-        timeBlockDispatch({
-          type: "SET_DATA",
-          payload: {
-            data: fetchWorkTimeDatas,
-            nowRoute: nowRoute,
-          },
-        });
+        // timeBlockDispatch({
+        //   type: "SET_DATA",
+        //   payload: {
+        //     data: fetchWorkTimeDatas.fetchData,
+        //     nowRoute: nowRoute,
+        //   },
+        // });
         timeBlockDispatch({
           type: "SAVE_DATA",
           payload: { data: fetchWorkTimeDatas, nowRoute: nowRoute },
         });
       } else {
+        // timeBlockDispatch({
+        //   type: "CLEAN_TABLE",
+        //   payload: { str: "TODAY&WORKTABLE" },
+        // });
+        // timeBlockDispatch({
+        //   type: "SET_DATA",
+        //   payload: {
+        //     data: fetchWorkTimeDatas.fetchData,
+        //     nowRoute: nowRoute,
+        //   },
+        // });
         timeBlockDispatch({
-          type: "CLEAN_TABLE",
-          payload: { str: "TODAY&WORKTABLE" },
-        });
-        timeBlockDispatch({
-          type: "SET_DATA",
-          payload: {
-            data: fetchWorkTimeDatas,
-            nowRoute: nowRoute,
-          },
+          type: "SAVE_DATA",
+          payload: { data: fetchWorkTimeDatas, nowRoute: nowRoute },
         });
       }
     }
 
-    if (firstLoad) setFirstLoad(false);
+    // if (firstLoad) setFirstLoad(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchWorkTimeDatas]);
+
+  useEffect(() => {
+    timeBlockDispatch({
+      type: "CLEAN_TABLE",
+      payload: { str: "TODAY&WORKTABLE" },
+    });
+  }, [page]);
+
+  // useEffect(() => {
+  //   console.log(fetchWorkTimeDatas);
+  //   if (nowRoute === "admin") {
+  //     // console.log(fetchWorkTimeDatas.fetchData);
+  //     timeBlockDispatch({
+  //       type: "SAVE_DATA",
+  //       payload: { data: fetchWorkTimeDatas.fetchData, nowRoute: nowRoute },
+  //     });
+
+  //     if (fetchWorkTimeDatas.fetchData.length === 0) {
+  //       timeBlockDispatch({
+  //         type: "CLEAN_TABLE",
+  //         payload: { str: "TODAY&WORKTABLE" },
+  //       });
+  //       timeBlockDispatch({
+  //         type: "SET_NODATA_STORAGE",
+  //         payload: {
+  //           data: fetchWorkTimeDatas.fetchData,
+  //           nowRoute: nowRoute,
+  //         },
+  //       });
+  //     }
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [fetchWorkTimeDatas.page]);
 
   useEffect(() => {
     if (nowRoute === "admin") {

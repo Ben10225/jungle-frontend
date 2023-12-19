@@ -15,6 +15,7 @@ interface ResData {
 
 const ReservePage: React.FC = () => {
   const nowRoute = "reserve";
+  const [page, setPage] = useState(0);
   const [dataFromCalendar, setDataFromCalendar] = useState<CLickEvents>({
     detect: false,
     date: "",
@@ -45,22 +46,18 @@ const ReservePage: React.FC = () => {
     setDataFromCalendar(data);
   };
 
-  const handlePageChange = (page: number) => {
-    page === 1
+  const handlePageChange = (pg: number) => {
+    pg === 1
       ? setForChildSureData(sureTimeData.result.nextMonth)
       : setForChildSureData(sureTimeData.result.thisMonth);
     setDataFromCalendar({ detect: false, date: "" });
+
+    setPage(pg);
   };
 
   useEffect(() => {
-    if (
-      sureTimeData.result.thisMonth[0].yymm !== "" ||
-      dataFromCalendar.date === ""
-    )
-      return;
-
-    const yy = dataFromCalendar.date.split(" ")[0];
-    const mm = dataFromCalendar.date.split(" ")[1];
+    const yy = new Date().getFullYear().toString();
+    const mm = (new Date().getMonth() + 1).toString();
     const thisMonth = yy + "-" + mm;
     const nextMonth = getMonthUrlQuery(parseInt(yy), parseInt(mm) + 1);
 
@@ -70,20 +67,29 @@ const ReservePage: React.FC = () => {
           `${ENDPOINT}/available?r=${nowRoute}&thisMonth=${thisMonth}&nextMonth=${nextMonth}`
         );
 
+        const thisM =
+          response.data.result.thisMonth === null
+            ? []
+            : response.data.result.thisMonth;
+        const nextM =
+          response.data.result.nextMonth === null
+            ? []
+            : response.data.result.nextMonth;
+
         setSureTimeData({
           result: {
-            thisMonth: response.data.result.thisMonth,
-            nextMonth: response.data.result.nextMonth,
+            thisMonth: thisM,
+            nextMonth: nextM,
           },
         });
-        setForChildSureData(response.data.result.thisMonth);
+        setForChildSureData(thisM);
       } catch (error) {
         console.log(error);
       }
     };
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataFromCalendar]);
+  }, []);
 
   return (
     <>
@@ -103,6 +109,7 @@ const ReservePage: React.FC = () => {
               clickEvents={dataFromCalendar}
               fetchWorkTimeDatas={forChildSureData}
               nowRoute={nowRoute}
+              page={page}
               mode={""}
             />
           </div>

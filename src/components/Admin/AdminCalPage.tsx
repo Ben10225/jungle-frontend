@@ -26,6 +26,7 @@ interface ResPostData {
 
 const AdminCalPage: React.FC = () => {
   const nowRoute = "admin";
+  const [page, setPage] = useState(0);
   const [isChecked, setChecked] = useState(false);
   const [updateBtnClick, setUpdateBtnClick] = useState(false);
   const [mode, setMode] = useState<string>("SHOWRESERVED");
@@ -71,10 +72,14 @@ const AdminCalPage: React.FC = () => {
     setDataFromCalendar(data);
   };
 
-  const handlePageChange = (page: number) => {
-    page === 1
+  const handlePageChange = (pg: number) => {
+    pg === 0
+      ? setForChildSureData(sureTimeData.result.thisMonth)
+      : pg === 1
       ? setForChildSureData(sureTimeData.result.nextMonth)
-      : setForChildSureData(sureTimeData.result.thisMonth);
+      : setForChildSureData(sureTimeData.result.theMonthAfterNext);
+
+    setPage(page);
   };
 
   const handleUpdateWorkTime = (
@@ -110,8 +115,8 @@ const AdminCalPage: React.FC = () => {
   };
 
   const getMonth = () => {
-    const yy = dataFromCalendar.date.split(" ")[0];
-    const mm = dataFromCalendar.date.split(" ")[1];
+    const yy = new Date().getFullYear().toString();
+    const mm = (new Date().getMonth() + 1).toString();
     const thisMonth = yy + "-" + mm;
 
     const nextMonth = getMonthUrlQuery(parseInt(yy), parseInt(mm) + 1);
@@ -136,12 +141,7 @@ const AdminCalPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (
-      sureTimeData.result.thisMonth &&
-      (sureTimeData.result.thisMonth[0].yymm !== "" ||
-        dataFromCalendar.date === "")
-    )
-      return;
+    if (sureTimeData.result.thisMonth.length === 0) return;
 
     const thisMonth = getMonth()[0];
     const nextMonth = getMonth()[1];
@@ -151,22 +151,53 @@ const AdminCalPage: React.FC = () => {
         const response = await axios.get<ResData>(
           `${ENDPOINT}/available?r=${nowRoute}&thisMonth=${thisMonth}&nextMonth=${nextMonth}&theMonthAfterNext=${theMonthAfterNext}`
         );
+        console.log(response.data);
+        const thisM =
+          response.data.result.thisMonth === null
+            ? [
+                {
+                  yymm: "",
+                  date: "",
+                  workTime: [],
+                },
+              ]
+            : response.data.result.thisMonth;
+        const nextM =
+          response.data.result.nextMonth === null
+            ? [
+                {
+                  yymm: "",
+                  date: "",
+                  workTime: [],
+                },
+              ]
+            : response.data.result.nextMonth;
+        const afterM =
+          response.data.result.theMonthAfterNext === null
+            ? [
+                {
+                  yymm: "",
+                  date: "",
+                  workTime: [],
+                },
+              ]
+            : response.data.result.theMonthAfterNext;
 
         setSureTimeData({
           result: {
-            thisMonth: response.data.result.thisMonth,
-            nextMonth: response.data.result.nextMonth,
-            theMonthAfterNext: response.data.result.theMonthAfterNext,
+            thisMonth: thisM,
+            nextMonth: nextM,
+            theMonthAfterNext: afterM,
           },
         });
-        setForChildSureData(response.data.result.thisMonth);
+        setForChildSureData(thisM);
       } catch (error) {
         console.log(error);
       }
     };
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataFromCalendar]);
+  }, []);
 
   useEffect(() => {
     if (updateWorkTime.create.length > 0 || updateWorkTime.update.length > 0) {
@@ -212,6 +243,7 @@ const AdminCalPage: React.FC = () => {
               clickEvents={dataFromCalendar}
               fetchWorkTimeDatas={forChildSureData}
               nowRoute={nowRoute}
+              page={page}
               mode={mode}
             />
             <input
