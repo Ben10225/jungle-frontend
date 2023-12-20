@@ -16,6 +16,7 @@ interface ResData {
 const ReservePage: React.FC = () => {
   const nowRoute = "reserve";
   const [page, setPage] = useState(0);
+  const [getFetchResponse, setGetFetchResponse] = useState(false);
   const [dataFromCalendar, setDataFromCalendar] = useState<CLickEvents>({
     detect: false,
     date: "",
@@ -85,6 +86,8 @@ const ReservePage: React.FC = () => {
         setForChildSureData(thisM);
       } catch (error) {
         console.log(error);
+      } finally {
+        setGetFetchResponse(true);
       }
     };
     fetchData();
@@ -107,6 +110,7 @@ const ReservePage: React.FC = () => {
               onUpdateWorkTime={() => {}}
               updateBtnClick={false}
               clickEvents={dataFromCalendar}
+              getFetchResponse={getFetchResponse}
               fetchWorkTimeDatas={forChildSureData}
               nowRoute={nowRoute}
               page={page}

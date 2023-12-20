@@ -193,6 +193,7 @@ const Calender: React.FC<CalendarProps> = ({
   };
 
   const adminCalendarRender = () => {
+    // calendar showreserved & arrange mode change
     if (mode === "SHOWRESERVED") {
       renderCalendar();
       dispatch({
@@ -254,6 +255,7 @@ const Calender: React.FC<CalendarProps> = ({
   }, [fetchWorkTimeDatas]);
 
   useEffect(() => {
+    // click mode button
     if (nowRoute === "admin") {
       adminCalendarRender();
     }

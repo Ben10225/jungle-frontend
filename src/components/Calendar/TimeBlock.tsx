@@ -10,6 +10,7 @@ interface TimeBlockProps {
   nowRoute: string;
   mode: string;
   page: number;
+  getFetchResponse: boolean;
   fetchWorkTimeDatas: WorkTimeData[];
   updateBtnClick: boolean;
   onUpdateWorkTime: (oldData: WorkTimeData[], newData: WorkTimeData[]) => void;
@@ -17,6 +18,7 @@ interface TimeBlockProps {
 
 const TimeBlock: React.FC<TimeBlockProps> = ({
   clickEvents,
+  getFetchResponse,
   fetchWorkTimeDatas,
   nowRoute,
   mode,
@@ -24,7 +26,6 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
   updateBtnClick,
   onUpdateWorkTime,
 }: TimeBlockProps): ReactElement => {
-  const [firstLoad, setFirstLoad] = useState<boolean>(true);
   const [selectIndex, setSelectIndex] = useState<number>(-1);
 
   const [timeBlockState, timeBlockDispatch] = useReducer(
@@ -50,7 +51,6 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
       return;
     const str: string[] = data.split(" ");
 
-    // console.log(str);
     timeBlockDispatch({
       type: "SET_TODAY",
       payload: { today: str },
@@ -62,20 +62,17 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
   };
 
   const handleArrangeTableRander = () => {
-    timeBlockDispatch({
-      type: "CLEAN_TABLE",
-      payload: { str: "TODAY&WORKTABLE" },
-    });
-    // mode === "ARRANGE";
-    timeBlockDispatch({
-      type: "CHANGE_MODE",
-      payload: { str: mode },
-    });
-
-    timeBlockDispatch({
-      type: "SET_DATA",
-      payload: { data: fetchWorkTimeDatas, nowRoute: nowRoute },
-    });
+    if (mode === "ARRANGE") {
+      timeBlockDispatch({
+        type: "CLEAN_TABLE",
+        payload: { str: "TODAY" },
+      });
+    } else if (mode === "SHOWRESERVED") {
+      timeBlockDispatch({
+        type: "CLEAN_TABLE",
+        payload: { str: "TODAY&WORKTABLE" },
+      });
+    }
   };
 
   useEffect(() => {
@@ -93,38 +90,23 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
     }
 
     if (nowRoute === "admin") {
-      timeBlockState.mode.showReserved
-        ? timeBlockDispatch({
-            type: "CLEAN_TABLE",
-            payload: { str: "WORKTABLE" },
-          })
-        : timeBlockDispatch({
-            type: "SET_DATA",
-            payload: {
-              data: fetchWorkTimeDatas,
-              nowRoute: nowRoute,
-            },
-          });
+      if (timeBlockState.mode.arrange) {
+        timeBlockDispatch({
+          type: "SET_DATA",
+          payload: {
+            data: fetchWorkTimeDatas,
+            nowRoute: nowRoute,
+          },
+        });
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clickEvents]);
 
   useEffect(() => {
-    // change page
+    if (!getFetchResponse) return;
     if (nowRoute === "reserve") {
-      // no data
       if (fetchWorkTimeDatas.length === 0) return;
-
-      if (
-        fetchWorkTimeDatas[0].date === "" &&
-        fetchWorkTimeDatas[0].yymm === ""
-      )
-        return;
-
-      // if (firstLoad) {
-      // console.log("first");
-      // if (firstLoad) setFirstLoad(false);
-
       getTodayString(clickEvents.date);
       timeBlockDispatch({
         type: "SET_DATA",
@@ -133,94 +115,67 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
           nowRoute: nowRoute,
         },
       });
-      // } else {
-      // timeBlockDispatch({
-      //   type: "CLEAN_TABLE",
-      //   payload: { str: "TODAY&WORKTABLE" },
-      // });
-      // }
     }
 
     if (nowRoute === "admin") {
-      if (firstLoad) {
-        // timeBlockDispatch({
-        //   type: "SET_DATA",
-        //   payload: {
-        //     data: fetchWorkTimeDatas.fetchData,
-        //     nowRoute: nowRoute,
-        //   },
-        // });
-        timeBlockDispatch({
-          type: "SAVE_DATA",
-          payload: { data: fetchWorkTimeDatas, nowRoute: nowRoute },
-        });
-      } else {
-        // timeBlockDispatch({
-        //   type: "CLEAN_TABLE",
-        //   payload: { str: "TODAY&WORKTABLE" },
-        // });
-        // timeBlockDispatch({
-        //   type: "SET_DATA",
-        //   payload: {
-        //     data: fetchWorkTimeDatas.fetchData,
-        //     nowRoute: nowRoute,
-        //   },
-        // });
-        timeBlockDispatch({
-          type: "SAVE_DATA",
-          payload: { data: fetchWorkTimeDatas, nowRoute: nowRoute },
-        });
-      }
+      timeBlockDispatch({
+        type: "SET_DATA",
+        payload: { data: fetchWorkTimeDatas, nowRoute: nowRoute },
+      });
+
+      timeBlockDispatch({
+        type: "SAVE_ORIGIN",
+        payload: {
+          data: fetchWorkTimeDatas,
+        },
+      });
     }
 
-    // if (firstLoad) setFirstLoad(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchWorkTimeDatas]);
+  }, [getFetchResponse]);
 
   useEffect(() => {
+    if (nowRoute === "admin") {
+      timeBlockDispatch({
+        type: "SET_DATA",
+        payload: {
+          data: fetchWorkTimeDatas,
+          nowRoute: nowRoute,
+        },
+      });
+
+      timeBlockDispatch({
+        type: "SAVE_ORIGIN",
+        payload: {
+          data: fetchWorkTimeDatas,
+        },
+      });
+    }
+
     timeBlockDispatch({
       type: "CLEAN_TABLE",
       payload: { str: "TODAY&WORKTABLE" },
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
-  // useEffect(() => {
-  //   console.log(fetchWorkTimeDatas);
-  //   if (nowRoute === "admin") {
-  //     // console.log(fetchWorkTimeDatas.fetchData);
-  //     timeBlockDispatch({
-  //       type: "SAVE_DATA",
-  //       payload: { data: fetchWorkTimeDatas.fetchData, nowRoute: nowRoute },
-  //     });
-
-  //     if (fetchWorkTimeDatas.fetchData.length === 0) {
-  //       timeBlockDispatch({
-  //         type: "CLEAN_TABLE",
-  //         payload: { str: "TODAY&WORKTABLE" },
-  //       });
-  //       timeBlockDispatch({
-  //         type: "SET_NODATA_STORAGE",
-  //         payload: {
-  //           data: fetchWorkTimeDatas.fetchData,
-  //           nowRoute: nowRoute,
-  //         },
-  //       });
-  //     }
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [fetchWorkTimeDatas.page]);
-
   useEffect(() => {
+    // click mode button
     if (nowRoute === "admin") {
       handleArrangeTableRander();
     }
+    timeBlockDispatch({
+      type: "CHANGE_MODE",
+      payload: { str: mode },
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
 
   useEffect(() => {
     if (updateBtnClick) {
+      // compare origin and storage
       if (!_.isEqual(timeBlockState.origin, timeBlockState.storage)) {
-        onUpdateWorkTime(timeBlockState.origin, timeBlockState.storage);
+        onUpdateWorkTime(timeBlockState.createData, timeBlockState.updateData);
         timeBlockDispatch({
           type: "UPLOAD_RESET_DATA",
         });

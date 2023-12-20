@@ -11,7 +11,9 @@ interface timeBlockData {
   };
   origin: WorkTimeData[];
   storage: WorkTimeData[];
-  noDataStorage: WorkTimeData[];
+
+  createData: WorkTimeData[];
+  updateData: WorkTimeData[];
 }
 
 interface UpdateDateAction {
@@ -37,9 +39,9 @@ interface SetTodayAction {
   payload: { today: string[] };
 }
 
-interface SaveDataAction {
-  type: "SAVE_DATA";
-  payload: { data: WorkTimeData[]; nowRoute: string };
+interface SaveOriginAction {
+  type: "SAVE_ORIGIN";
+  payload: { data: WorkTimeData[] };
 }
 
 interface ChangeModeAction {
@@ -51,26 +53,19 @@ interface UploadResetDataAction {
   type: "UPLOAD_RESET_DATA";
 }
 
-interface SetNoDateStorageAction {
-  type: "SET_NODATA_STORAGE";
-  payload: { data: WorkTimeData[]; nowRoute: string };
-}
-
 type Action =
   | UpdateDateAction
   | SetDataAcrion
   | CleanTableAction
   | SetTodayAction
-  | SaveDataAction
+  | SaveOriginAction
   | ChangeModeAction
-  | UploadResetDataAction
-  | SetNoDateStorageAction;
+  | UploadResetDataAction;
 
 export const timeBlockReducer = (state: timeBlockData, action: Action) => {
   switch (action.type) {
     case "UPDATE_ITEM": {
       // update storage
-
       const tmpData: WorkTimeData = {
         date: state.today[2],
         yymm: state.today[0] + "-" + state.today[1],
@@ -81,8 +76,8 @@ export const timeBlockReducer = (state: timeBlockData, action: Action) => {
           tmpData.workTime[i] = n === 1 ? -1 : 1;
         }
       });
-      let pushData = false;
 
+      let pushData = false;
       const tmpStorage = state.storage.map((data) => {
         if (data.yymm === tmpData.yymm && data.date === tmpData.date) {
           data.workTime = tmpData.workTime;
@@ -95,35 +90,83 @@ export const timeBlockReducer = (state: timeBlockData, action: Action) => {
         tmpStorage.push(tmpData);
       }
 
+      const tmpWorkTime = state.workTime.map((st, i) => {
+        if (action.payload.index === i) {
+          return st === work.on ? work.off : work.on;
+        } else {
+          return st;
+        }
+      });
+
+      const nowClickWorkTimeValue: WorkTimeData = {
+        yymm: state.today[0] + "-" + state.today[1],
+        date: state.today[2],
+        workTime: tmpWorkTime,
+      };
+
+      const existsOriginData = checkDataExist(
+        [nowClickWorkTimeValue],
+        state.origin
+      );
+
+      /* add data to updateData */
+      if (existsOriginData) {
+        const tmpUpdate: WorkTimeData[] = _.cloneDeep(state.updateData);
+        const existsUpdateData = checkDataExist(
+          [nowClickWorkTimeValue],
+          state.updateData
+        );
+
+        // update date repeat
+        if (existsUpdateData) {
+          const r = changeRepeatValue(nowClickWorkTimeValue, state.updateData);
+          return {
+            ...state,
+            workTime: tmpWorkTime,
+            storage: [...tmpStorage],
+            updateData: r,
+          };
+        }
+
+        // update date no repeat
+        tmpUpdate.push(nowClickWorkTimeValue);
+        return {
+          ...state,
+          workTime: tmpWorkTime,
+          storage: [...tmpStorage],
+          updateData: tmpUpdate,
+        };
+      }
+
+      /* add data to createData */
+      const tmpCreate: WorkTimeData[] = _.cloneDeep(state.createData);
+      const existsCreateData = checkDataExist(
+        [nowClickWorkTimeValue],
+        state.createData
+      );
+
+      // create date repeat
+      if (existsCreateData) {
+        const r = changeRepeatValue(nowClickWorkTimeValue, state.createData);
+        return {
+          ...state,
+          workTime: tmpWorkTime,
+          storage: [...tmpStorage],
+          createData: r,
+        };
+      }
+
+      tmpCreate.push(nowClickWorkTimeValue);
       return {
         ...state,
-        workTime: state.workTime.map((st, i) => {
-          if (action.payload.index === i) {
-            return st === work.on ? work.off : work.on;
-          } else {
-            return st;
-          }
-        }),
+        workTime: tmpWorkTime,
         storage: [...tmpStorage],
+        createData: tmpCreate,
       };
     }
     case "SET_DATA": {
       // reserve
       if (action.payload.nowRoute === "reserve") {
-        // if (action.payload.data[0].date === "") {
-        //   return {
-        //     ...state,
-        //     workTime: [],
-        //   };
-        // }
-        // if (state.today[0] === "" || action.payload.data[0].date === "") {
-        //   {
-        //     return {
-        //       ...state,
-        //       workTime: [],
-        //     };
-        //   }
-        // }
         const todayString =
           state.today[0] + "-" + state.today[1] + state.today[2];
         const matchingItem = action.payload.data.find(
@@ -149,79 +192,42 @@ export const timeBlockReducer = (state: timeBlockData, action: Action) => {
       }
 
       // admin
-
-      if (state.mode.showReserved) {
-        return {
-          ...state,
-          workTime: [],
-        };
-      }
-      // console.log(action.payload.data);
-      // console.log(state.storage);
-
-      // console.log(state.today);
-      // console.log(state.today);
-
-      if (action.payload.data.length === 0) {
-        // if (action.payload.data === null) {
-        //   console.log("here", action.payload.data);
-        //   if (state.noDataStorage.length === 0 && state.storage.length === 0) {
-        //     // console.log("b");
-        //     return {
-        //       ...state,
-        //       workTime: [],
-        //       origin: [],
-        //       storage: [],
-        //     };
-        //   }
-        // }
-
-        if (state.storage.length > 0) {
-          if (!_.isEqual(action.payload.data, state.storage)) {
-            const tmp: WorkTimeData[] = _.cloneDeep(state.storage);
-            const existIndex: number[] = [];
-
-            state.storage.forEach((item, index) => {
-              for (let i = 0; i < action.payload.data.length; i++) {
-                if (
-                  item.yymm === action.payload.data[i].yymm &&
-                  item.date === action.payload.data[i].date
-                ) {
-                  tmp[index] = item;
-                  existIndex.push(i);
-                  break;
-                }
-              }
-            });
-            action.payload.data.forEach((item, i) => {
-              if (!existIndex.includes(i)) {
-                tmp.push(item);
-              }
-            });
-
-            return {
-              ...state,
-              storage: _.cloneDeep(tmp),
-            };
-          }
-        }
-        return {
-          ...state,
-          workTime: [],
-        };
-      }
-
-      // admin fetch data
-      // console.log(state.storage);
-      if (state.storage.length === 0) {
-        return {
-          ...state,
-          workTime: [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-        };
-      }
+      const storageHasAddBefore = checkDataExist(
+        action.payload.data,
+        state.storage
+      );
 
       const todayString =
         state.today[0] + "-" + state.today[1] + state.today[2];
+
+      if (!storageHasAddBefore) {
+        const matchingItem = state.storage.find(
+          (item) => todayString === item.yymm + item.date
+        );
+
+        const tmp = _.cloneDeep(state.storage);
+        action.payload.data.forEach((item) => {
+          tmp.push(item);
+        });
+
+        // make sure storage data set at first showReserved state
+        if (state.mode.showReserved) {
+          return {
+            ...state,
+            workTime: [],
+            storage: _.cloneDeep(tmp),
+          };
+        }
+
+        // mode == ARRANGE
+        return {
+          ...state,
+          workTime: matchingItem
+            ? matchingItem.workTime
+            : [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+          storage: _.cloneDeep(tmp),
+        };
+      }
 
       const matchingItem = state.storage.find(
         (item) => todayString === item.yymm + item.date
@@ -239,13 +245,17 @@ export const timeBlockReducer = (state: timeBlockData, action: Action) => {
         return {
           ...state,
           workTime: [],
-          // today: [],
-          // storage: [...state.storage]
+          today: [],
+        };
+      } else if (action.payload.str === "WORKTABLE") {
+        return {
+          ...state,
+          workTime: [],
         };
       } else {
         return {
           ...state,
-          workTime: [],
+          today: [],
         };
       }
 
@@ -255,12 +265,25 @@ export const timeBlockReducer = (state: timeBlockData, action: Action) => {
         today: action.payload.today,
       };
     }
-    case "SAVE_DATA": {
-      // console.log(action.payload.data);
+    case "SAVE_ORIGIN": {
+      const originHasAddBefore = checkDataExist(
+        action.payload.data,
+        state.origin
+      );
+      if (originHasAddBefore) {
+        return {
+          ...state,
+        };
+      }
+
+      const tmpOri = _.cloneDeep(state.origin);
+      action.payload.data.forEach((v) => {
+        tmpOri.push(v);
+      });
+
       return {
         ...state,
-        origin: _.cloneDeep(action.payload.data),
-        storage: _.cloneDeep(action.payload.data),
+        origin: tmpOri,
       };
     }
     case "CHANGE_MODE": {
@@ -280,12 +303,8 @@ export const timeBlockReducer = (state: timeBlockData, action: Action) => {
       return {
         ...state,
         origin: _.cloneDeep(state.storage),
-      };
-    }
-    case "SET_NODATA_STORAGE": {
-      return {
-        ...state,
-        noDataStorage: _.cloneDeep(state.storage),
+        createData: [],
+        updateData: [],
       };
     }
     default:
@@ -302,5 +321,30 @@ export const timeBlockInit: timeBlockData = {
   },
   origin: [],
   storage: [],
-  noDataStorage: [],
+  createData: [],
+  updateData: [],
+};
+
+const checkDataExist = (action: WorkTimeData[], state: WorkTimeData[]) => {
+  let originHasAddBefore = false;
+  action.forEach((dt) => {
+    for (let i = 0; i < state.length; i++) {
+      // console.log(dt, state[i]);
+      if (dt.yymm === state[i].yymm && dt.date === state[i].date) {
+        originHasAddBefore = true;
+        break;
+      }
+    }
+  });
+  return originHasAddBefore;
+};
+
+const changeRepeatValue = (v: WorkTimeData, state: WorkTimeData[]) => {
+  const tmpUpdate = _.cloneDeep(state);
+  tmpUpdate.forEach((i) => {
+    if (i.yymm === v.yymm && i.date === v.date) {
+      i.workTime = v.workTime;
+    }
+  });
+  return tmpUpdate;
 };

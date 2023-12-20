@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { ENDPOINT } from "../../App";
 import { WorkTimeData } from "../Calendar/CalenderNeeds";
 import { CLickEvents, getMonthUrlQuery } from "../Constant";
-import _ from "lodash";
 
 interface ResData {
   result: {
@@ -29,14 +28,13 @@ const AdminCalPage: React.FC = () => {
   const [page, setPage] = useState(0);
   const [isChecked, setChecked] = useState(false);
   const [updateBtnClick, setUpdateBtnClick] = useState(false);
+  const [getFetchResponse, setGetFetchResponse] = useState(false);
   const [mode, setMode] = useState<string>("SHOWRESERVED");
   const [dataFromCalendar, setDataFromCalendar] = useState<CLickEvents>({
     detect: false,
     date: "",
   });
-  const [forChildSureData, setForChildSureData] = useState<WorkTimeData[]>([
-    { yymm: "", date: "", workTime: [] },
-  ]);
+  const [forChildSureData, setForChildSureData] = useState<WorkTimeData[]>([]);
   const [updateWorkTime, setUpdateWorkTime] = useState<PostData>({
     create: [],
     update: [],
@@ -79,33 +77,13 @@ const AdminCalPage: React.FC = () => {
       ? setForChildSureData(sureTimeData.result.nextMonth)
       : setForChildSureData(sureTimeData.result.theMonthAfterNext);
 
-    setPage(page);
+    setPage(pg);
   };
 
   const handleUpdateWorkTime = (
-    oldData: WorkTimeData[],
-    newData: WorkTimeData[]
+    createData: WorkTimeData[],
+    updateData: WorkTimeData[]
   ) => {
-    const createData: WorkTimeData[] = [];
-    const updateData: WorkTimeData[] = [];
-
-    newData.forEach((newDt) => {
-      let dataNotInNewData = true;
-      for (let i = 0; i < oldData.length; i++) {
-        if (newDt.yymm === oldData[i].yymm && newDt.date === oldData[i].date) {
-          console.log(_.isEqual(newDt.workTime, oldData[i].workTime));
-          !_.isEqual(newDt.workTime, oldData[i].workTime)
-            ? updateData.push(newDt)
-            : null;
-          dataNotInNewData = false;
-        }
-      }
-
-      if (dataNotInNewData) {
-        createData.push(newDt);
-      }
-    });
-
     console.log(createData, updateData);
 
     setUpdateWorkTime({
@@ -151,36 +129,17 @@ const AdminCalPage: React.FC = () => {
         const response = await axios.get<ResData>(
           `${ENDPOINT}/available?r=${nowRoute}&thisMonth=${thisMonth}&nextMonth=${nextMonth}&theMonthAfterNext=${theMonthAfterNext}`
         );
-        console.log(response.data);
         const thisM =
           response.data.result.thisMonth === null
-            ? [
-                {
-                  yymm: "",
-                  date: "",
-                  workTime: [],
-                },
-              ]
+            ? []
             : response.data.result.thisMonth;
         const nextM =
           response.data.result.nextMonth === null
-            ? [
-                {
-                  yymm: "",
-                  date: "",
-                  workTime: [],
-                },
-              ]
+            ? []
             : response.data.result.nextMonth;
         const afterM =
           response.data.result.theMonthAfterNext === null
-            ? [
-                {
-                  yymm: "",
-                  date: "",
-                  workTime: [],
-                },
-              ]
+            ? []
             : response.data.result.theMonthAfterNext;
 
         setSureTimeData({
@@ -193,6 +152,8 @@ const AdminCalPage: React.FC = () => {
         setForChildSureData(thisM);
       } catch (error) {
         console.log(error);
+      } finally {
+        setGetFetchResponse(true);
       }
     };
     fetchData();
@@ -241,6 +202,7 @@ const AdminCalPage: React.FC = () => {
               onUpdateWorkTime={handleUpdateWorkTime}
               updateBtnClick={updateBtnClick}
               clickEvents={dataFromCalendar}
+              getFetchResponse={getFetchResponse}
               fetchWorkTimeDatas={forChildSureData}
               nowRoute={nowRoute}
               page={page}
