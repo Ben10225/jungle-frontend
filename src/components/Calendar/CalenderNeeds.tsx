@@ -93,12 +93,7 @@ export const reducer = (state: daysElementState, action: Action) => {
       };
     case "RESERVE_CLICK": {
       // no data
-      if (
-        action.payload.data.length === 0 ||
-        (action.payload.data.length === 1 &&
-          action.payload.data[0].yymm === "" &&
-          action.payload.data[0].yymm === "")
-      ) {
+      if (action.payload.data.length === 0) {
         const tmp: dayElement[] = _.cloneDeep(state.days);
         tmp.forEach((item) => {
           item.active = false;
@@ -127,12 +122,14 @@ export const reducer = (state: daysElementState, action: Action) => {
       );
 
       let lastMonthDay = true;
+      let todayDate = -1;
       const tmp = state.days.map((item) => {
         if (item.day === 1) lastMonthDay = false;
         if (lastMonthDay) {
           item.active = false;
           return item;
         }
+        if (item.isToday) todayDate = item.day;
         if (item.active) {
           if ((todayAllOff || !todayDataExists) && item.isToday) {
             item.clicked = false;
@@ -159,10 +156,14 @@ export const reducer = (state: daysElementState, action: Action) => {
       });
 
       // if today's work time all off cancel click ability
+      // && this month close days before yesterday
       let passDay1: boolean = false;
       tmp.forEach((item) => {
         if (item.day === 1) passDay1 = true;
         if (!passDay1) return;
+        if (item.day < todayDate) {
+          item.active = false;
+        }
         if (allFalseArr.includes(item.day)) {
           item.clicked = false;
           item.active = false;

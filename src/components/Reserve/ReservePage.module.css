@@ -1,8 +1,11 @@
+html {
+  background-color: #f2d8bf;
+}
+
 .wrapper {
   display: flex;
   justify-content: center;
   flex-direction: column;
-  background-color: #f2d8bf;
 }
 
 .block {

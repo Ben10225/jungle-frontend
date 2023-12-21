@@ -1,0 +1,102 @@
+.calendar {
+  font-family: "Poppins", sans-serif;
+  padding: 20px;
+  height: 460px;
+  padding-top: 12px;
+  position: relative;
+}
+
+.titleyear {
+  font-size: 23px;
+  margin-right: 15px;
+  color: #6c3b1c;
+}
+
+.titlemonth {
+  font-size: 25px;
+  color: #6c3b1c;
+}
+
+.calendar header .icons span {
+  height: 38px;
+  width: 38px;
+  margin: 0 1px;
+  cursor: pointer;
+  color: #878787;
+  text-align: center;
+  line-height: 38px;
+  font-size: 1.9rem;
+  user-select: none;
+  border-radius: 50%;
+}
+
+.calendar header .icons span.inactive {
+  color: #ddd;
+}
+
+.calendar ul {
+  display: flex;
+  flex-wrap: wrap;
+  list-style: none;
+  text-align: center;
+}
+
+.calendar .weeks li {
+  font-weight: 500;
+}
+
+.calendar .days li {
+  cursor: pointer;
+  margin-top: 10px;
+  z-index: 1;
+  padding: 7px;
+}
+
+.calendar li.inactive {
+  color: #e9c299;
+}
+
+.calendar li.active {
+  color: #fff;
+}
+
+.calendar ul li {
+  color: #854015;
+  width: calc(100% / 7);
+  font-size: 1.07rem;
+  position: relative;
+}
+
+.calendar .days li::before {
+  position: absolute;
+  content: "";
+  left: 50%;
+  top: 50%;
+  height: 40px;
+  width: 40px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  /* background-color: #f2f2f2; */
+  z-index: -1;
+}
+
+.day {
+  font-weight: 300 !important;
+  color: red;
+}
+
+.days .day.isToday {
+  color: #ffffff !important;
+}
+
+.days li.isToday::before {
+  background-color: #eab5a0;
+}
+
+.days .day.clicked {
+  color: #fff !important;
+}
+
+.days li.clicked::before {
+  background-color: #9f5c38;
+}

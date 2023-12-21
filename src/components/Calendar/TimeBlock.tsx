@@ -2,7 +2,7 @@ import { ReactElement, useState, useEffect, useReducer } from "react";
 import { WorkTimeData } from "./CalenderNeeds";
 import { work, CLickEvents } from "../Constant";
 import { timeBlockReducer, timeBlockInit } from "./TimeBlockNeeds";
-
+import styles from "./TimeBlock.module.css";
 import _ from "lodash";
 
 interface TimeBlockProps {
@@ -27,7 +27,8 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
   onUpdateWorkTime,
 }: TimeBlockProps): ReactElement => {
   const [selectIndex, setSelectIndex] = useState<number>(-1);
-
+  const [showReserveNullBlock, setShowReserveNullBlock] =
+    useState<boolean>(false);
   const [timeBlockState, timeBlockDispatch] = useReducer(
     timeBlockReducer,
     timeBlockInit
@@ -80,6 +81,9 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
     setSelectIndex(-1);
 
     if (nowRoute === "reserve") {
+      clickEvents.detect
+        ? setShowReserveNullBlock(true)
+        : setShowReserveNullBlock(false);
       timeBlockDispatch({
         type: "SET_DATA",
         payload: {
@@ -114,6 +118,16 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
           data: fetchWorkTimeDatas,
           nowRoute: nowRoute,
         },
+      });
+
+      const tmpToday = clickEvents.date.split(" ");
+      fetchWorkTimeDatas.forEach((item) => {
+        if (
+          item.yymm === tmpToday[0] + "-" + tmpToday[1] &&
+          item.date === tmpToday[2]
+        ) {
+          setShowReserveNullBlock(true);
+        }
       });
     }
 
@@ -188,7 +202,7 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
     <div className="flex justify-center flex-col items-center">
       <div className="w-4/5">
         <hr className="w-full mb-4" />
-        <div className="time-wrapper">
+        <div className={styles.timeWrapper}>
           <div className="today-block">
             <span>{timeBlockState.today[0]}</span>
             {timeBlockState.today.length > 0 && (
@@ -202,31 +216,38 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
           </div>
           {/* reserver */}
           {nowRoute === "reserve" && (
-            <div className="select-block">
-              {timeBlockState.workTime.map((state, i) => {
-                return (
-                  state === work.on && (
-                    <div
-                      onClick={() => handleReserveClickPeriod(i)}
-                      key={i}
-                      className={`time ${selectIndex === i ? "select" : ""}`}
-                    >
-                      {i + 10}:00
-                    </div>
-                  )
-                );
-              })}
-            </div>
+            <>
+              <div className={styles.selectBlock}>
+                {timeBlockState.workTime.map((state, i) => {
+                  return (
+                    state === work.on && (
+                      <div
+                        onClick={() => handleReserveClickPeriod(i)}
+                        key={i}
+                        className={`${styles.time} ${
+                          selectIndex === i ? `${styles.select}` : ""
+                        }`}
+                      >
+                        {i + 10}:00
+                      </div>
+                    )
+                  );
+                })}
+              </div>
+              {showReserveNullBlock && <div className={styles.nullBlock}></div>}
+            </>
           )}
           {/* admin */}
           {nowRoute === "admin" && mode === "ARRANGE" && (
-            <div className="select-block">
+            <div className={styles.selectblock}>
               {timeBlockState.workTime.map((state, i) => {
                 return (
                   <div
                     onClick={() => handleArrangePeriodClick(state, i)}
                     key={i}
-                    className={`time ${state === work.off ? "stop" : ""} `}
+                    className={`${styles.time} ${
+                      state === work.off ? `${styles.stop}` : ""
+                    } `}
                   >
                     {i + 10}:00
                   </div>

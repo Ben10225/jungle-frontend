@@ -1,4 +1,7 @@
 import { useRef } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCaretLeft, faCaretRight } from "@fortawesome/free-solid-svg-icons";
+import styles from "./PrevNextBtn.module.css";
 
 interface PrevNextBtnProps {
   clientPage: number;
@@ -25,23 +28,23 @@ const PrevNextBtn = ({
   onMinusCurrentMonth,
   onPageChange,
 }: PrevNextBtnProps) => {
-  const prevIcon = useRef<HTMLSpanElement>(null);
-  const nextIcon = useRef<HTMLSpanElement>(null);
+  const prevIcon = useRef<SVGSVGElement>(null);
+  const nextIcon = useRef<SVGSVGElement>(null);
 
-  const handlePrevNextIcon = (e: React.MouseEvent<HTMLSpanElement>) => {
-    const targetButton = e.target as HTMLButtonElement;
+  const handlePrevNextIcon = (e: React.MouseEvent<SVGSVGElement>) => {
+    const tg = e.currentTarget;
     const n = nowRoute === "reserve" ? 1 : 2;
 
     if (
-      (clientPage === 0 && targetButton.id === "prev") ||
-      (clientPage === n && targetButton.id === "next")
+      (clientPage === 0 && tg.id === "prev") ||
+      (clientPage === n && tg.id === "next")
     )
       return;
 
     let page = clientPage;
     let nowMonth = date.currMonth;
 
-    if (targetButton.id === "prev") {
+    if (tg.id === "prev") {
       nowMonth--;
       onMinusCurrentMonth();
       onPrevNextBtnClick(clientPage - 1);
@@ -61,53 +64,57 @@ const PrevNextBtn = ({
   };
 
   return (
-    <div className="icons">
+    <div className={styles.icons}>
       {nowRoute === "reserve" && (
         <>
-          <span
-            ref={prevIcon}
-            id="prev"
-            className={`material-symbols-rounded ${
-              clientPage === 0 ? "inactive" : ""
-            }`}
-            onClick={(e) => handlePrevNextIcon(e)}
-          >
-            chevron_left
-          </span>
-          <span
-            ref={nextIcon}
-            id="next"
-            className={`material-symbols-rounded ${
-              clientPage === 1 ? "inactive" : ""
-            }`}
-            onClick={(e) => handlePrevNextIcon(e)}
-          >
-            chevron_right
-          </span>
+          <div className={styles.block}>
+            <FontAwesomeIcon
+              ref={prevIcon}
+              id="prev"
+              className={`${clientPage === 0 ? `${styles.inactive}` : ""} ${
+                styles.icon
+              }`}
+              onClick={(e) => handlePrevNextIcon(e)}
+              icon={faCaretLeft}
+            />
+          </div>
+          <div className={styles.block}>
+            <FontAwesomeIcon
+              ref={nextIcon}
+              id="next"
+              className={`${clientPage === 1 ? `${styles.inactive}` : ""} ${
+                styles.icon
+              }`}
+              onClick={(e) => handlePrevNextIcon(e)}
+              icon={faCaretRight}
+            />
+          </div>
         </>
       )}
       {nowRoute === "admin" && (
         <>
-          <span
-            ref={prevIcon}
-            id="prev"
-            className={`material-symbols-rounded ${
-              clientPage === 0 ? "inactive" : ""
-            }`}
-            onClick={(e) => handlePrevNextIcon(e)}
-          >
-            chevron_left
-          </span>
-          <span
-            ref={nextIcon}
-            id="next"
-            className={`material-symbols-rounded ${
-              clientPage === 2 ? "inactive" : ""
-            }`}
-            onClick={(e) => handlePrevNextIcon(e)}
-          >
-            chevron_right
-          </span>
+          <div className={styles.block}>
+            <FontAwesomeIcon
+              ref={prevIcon}
+              id="prev"
+              className={`${clientPage === 0 ? `${styles.inactive}` : ""} ${
+                styles.icon
+              }`}
+              onClick={(e) => handlePrevNextIcon(e)}
+              icon={faCaretLeft}
+            />
+          </div>
+          <div className={styles.block}>
+            <FontAwesomeIcon
+              ref={nextIcon}
+              id="next"
+              className={`${clientPage === 2 ? `${styles.inactive}` : ""} ${
+                styles.icon
+              }`}
+              onClick={(e) => handlePrevNextIcon(e)}
+              icon={faCaretRight}
+            />
+          </div>
         </>
       )}
     </div>

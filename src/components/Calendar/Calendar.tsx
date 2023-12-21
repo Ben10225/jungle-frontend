@@ -2,6 +2,7 @@ import { useState, useEffect, useReducer } from "react";
 import { reducer, WorkTimeData, months } from "./CalenderNeeds";
 import { CLickEvents } from "../Constant";
 import PrevNextBtn from "./PrevNextBtn";
+import styles from "./Calendar.module.css";
 import {
   dayElement,
   daysElementState,
@@ -259,14 +260,15 @@ const Calender: React.FC<CalendarProps> = ({
     if (nowRoute === "admin") {
       adminCalendarRender();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
 
   return (
-    <div className="calendar">
+    <div className={styles.calendar}>
       <header className="flex items-center justify-between p-5 mb-2">
         <div>
-          <span className="title-year">{date.currYear}</span>
-          <span className="title-month">{months[date.currMonth]}</span>
+          <span className={styles.titleyear}>{date.currYear}</span>
+          <span className={styles.titlemonth}>{months[date.currMonth]}</span>
         </div>
         <PrevNextBtn
           clientPage={clientPage}
@@ -290,13 +292,15 @@ const Calender: React.FC<CalendarProps> = ({
       </ul>
       {/* reserve */}
       {nowRoute === "reserve" && (
-        <ul className="days">
+        <ul className={styles.days}>
           {state.days.map((item, index) => {
             return (
               <li
-                className={`day ${item.active ? "" : "inactive"} ${
-                  item.isToday ? "isToday" : ""
-                } ${item.clicked ? "clicked" : ""}`}
+                className={`${styles.day} ${
+                  item.active ? "" : `${styles.inactive}`
+                } ${item.isToday ? `${styles.isToday}` : ""} ${
+                  item.clicked ? `${styles.clicked}` : ""
+                }`}
                 key={index}
                 onClick={() => handleClick(index, item)}
               >
@@ -308,13 +312,15 @@ const Calender: React.FC<CalendarProps> = ({
       )}
       {/* admin */}
       {nowRoute === "admin" && (
-        <ul className="days">
+        <ul className={styles.days}>
           {state.days.map((item, index) => {
             return (
               <li
-                className={`day ${item.active ? "" : "inactive"} ${
-                  item.isToday ? "isToday" : ""
-                } ${item.clicked ? "clicked" : ""}`}
+                className={`${styles.day} ${
+                  item.active ? "" : `${styles.inactive}`
+                } ${item.isToday ? `${styles.isToday}` : ""} ${
+                  item.clicked ? `${styles.clicked}` : ""
+                }`}
                 key={index}
                 onClick={() => handleClick(index, item)}
               >

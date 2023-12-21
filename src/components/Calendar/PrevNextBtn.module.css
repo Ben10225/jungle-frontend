@@ -1,0 +1,16 @@
+.icons {
+  position: absolute;
+  top: 35px;
+  width: 60%;
+  display: flex;
+  justify-content: space-between;
+}
+
+.icon {
+  font-size: 30px;
+  color: #945b46;
+}
+
+.icon.inactive {
+  opacity: 0.2;
+}

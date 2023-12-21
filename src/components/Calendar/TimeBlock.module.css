@@ -1,0 +1,28 @@
+.timeWrapper .selectBlock {
+  display: grid;
+  grid-template-columns: 27% 27% 27%;
+  text-align: center;
+  justify-content: space-between;
+}
+
+.timeWrapper .selectBlock .time {
+  margin-top: 14px;
+  /* border: 1px solid #000; */
+  border-radius: 8px;
+  padding: 5px;
+  background-color: #fff;
+}
+
+.time.select {
+  background-color: #d27c3b !important;
+  color: #fff;
+}
+
+.time.stop {
+  opacity: 0.2;
+}
+
+.nullBlock {
+  height: 130px;
+  width: 100%;
+}

@@ -5,7 +5,7 @@ interface ReserveState {
 }
 
 const initialState: ReserveState = {
-  part: "part1",
+  part: "part2",
 };
 
 const reserveSlice = createSlice({
