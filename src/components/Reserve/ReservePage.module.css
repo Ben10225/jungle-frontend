@@ -1,0 +1,52 @@
+.wrapper {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  background-color: #f2d8bf;
+}
+
+.block {
+  height: 70px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #ad5a1a;
+}
+
+.block div {
+  display: inline-block;
+  opacity: 0.2;
+}
+
+.circle {
+  display: inline-block;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  margin: 0 10px;
+  display: flex;
+  text-align: center;
+  line-height: 35px;
+  font-size: 23px;
+}
+
+header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+hr {
+  display: block;
+  height: 1px;
+  border: 0;
+  border-top: 1px solid #b88468;
+  width: 60%;
+  margin: 1em 0;
+  padding: 0;
+}
+
+.block div.show {
+  opacity: 1;
+}

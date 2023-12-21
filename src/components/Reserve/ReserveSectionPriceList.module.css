@@ -1,0 +1,179 @@
+h4 {
+  display: inline-block;
+  padding-right: 5px;
+}
+
+span {
+  font-size: 12px;
+  color: #777;
+  position: relative;
+  letter-spacing: 0.05em;
+}
+
+p {
+  font-size: 17px;
+  color: #666;
+}
+
+.wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.table {
+  width: 70%;
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  margin-top: 30px;
+}
+
+.description {
+  margin-top: 1px;
+}
+
+.block {
+  width: 100%;
+  background-color: #fff;
+  margin-top: 20px;
+  height: 80px;
+  border-radius: 10px;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+
+.time,
+.price {
+  display: inline-block;
+  margin-right: 20px;
+  font-size: 12px;
+}
+
+.icon {
+  margin-right: 5px;
+  position: relative;
+  color: #555;
+}
+
+.block.select {
+  outline: solid #ad5a1a 2px;
+}
+
+.check {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 25px;
+  height: 25px;
+  background-color: #ad5a1a;
+  border-radius: 0px 6px 0px 0px;
+}
+
+.check .icon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: 15px;
+}
+
+.nullBlock {
+  width: 100px;
+  height: 200px;
+}
+
+.next {
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+  height: 140px;
+  background: rgb(124, 106, 95);
+}
+
+.nextBlock {
+  margin-top: 20px;
+  position: relative;
+}
+
+.nextBlock .count {
+  position: relative;
+  width: 280px;
+  left: 50px;
+}
+
+.nextBlock .count .first {
+  width: 95px;
+}
+
+.nextBlock p {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 300;
+  display: inline-block;
+}
+
+.nextBlock .clear {
+  position: absolute;
+  margin-left: 50px;
+  color: rgb(255, 206, 30);
+  right: 0px;
+  top: 4px;
+}
+
+.nextBlock .back {
+  background-color: #f2d8bf;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+}
+
+.next .nextBlock .buttons {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.nextBlock .back .icon {
+  position: relative;
+  left: 3px;
+  color: #785044;
+}
+
+.next .buttons .calendar {
+  display: inline;
+  width: 170px;
+  text-align: center;
+  margin-left: 30px;
+  background-color: #f2d8bf;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 30px;
+  font-weight: 400;
+  color: #785044;
+  position: relative;
+}
+
+.next .buttons .calendar.fade {
+  color: #deb4a8;
+}
+
+.next .buttons .calendar .icon {
+  color: #785044;
+  right: -7px;
+}
+
+.next .buttons .calendar .icon.fade {
+  color: #deb4a8;
+}

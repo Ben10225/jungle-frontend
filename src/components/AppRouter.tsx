@@ -1,6 +1,6 @@
 import UserForm from "./UserForm";
 import HomePage from "./Home/HomePage";
-import ReservePage from "./Reserve/ReservePage";
+import ReservePage from "./Reserve/ReservePage.tsx";
 import AdminCalPage from "./Admin/AdminCalPage";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
