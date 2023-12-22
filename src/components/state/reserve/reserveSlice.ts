@@ -51,6 +51,21 @@ const initialState: ReserveState = {
   //     time: 30,
   //     cost: 1500,
   //   },
+  //   {
+  //     title: "除私密處",
+  //     time: 30,
+  //     cost: 3000,
+  //   },
+  //   {
+  //     title: "除鬍子",
+  //     time: 30,
+  //     cost: 1500,
+  //   },
+  //   {
+  //     title: "除私密處",
+  //     time: 30,
+  //     cost: 3000,
+  //   },
   // ],
 };
 

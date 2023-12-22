@@ -47,7 +47,7 @@ interface ClearClickAcyion {
 
 interface ReserveClickAction {
   type: "RESERVE_CLICK";
-  payload: { data: WorkTimeData[] };
+  payload: { data: WorkTimeData[]; bookingWholeHour: number };
 }
 
 interface AdminShowReservedAction {
@@ -169,6 +169,44 @@ export const reducer = (state: daysElementState, action: Action) => {
           item.active = false;
         }
       });
+
+      // if appointment whole time > 1 hour, and no time then close day
+      const hour = action.payload.bookingWholeHour;
+      const cantProvideDay: string[] = [];
+      if (hour !== 1) {
+        const extra = hour - 1;
+        const insideTmp = _.cloneDeep(action.payload.data);
+        const endIndex = insideTmp[0].workTime.length - 1 - extra;
+
+        insideTmp.forEach((item) => {
+          let gap = 0;
+          for (let i = 0; i < item.workTime.length; i++) {
+            if (i > endIndex) {
+              item.workTime[i] = -1;
+              continue;
+            }
+            if (gap !== 0) {
+              item.workTime[i] = -1;
+              gap--;
+            }
+            if (item.workTime[i + extra] !== 1) {
+              gap = extra;
+              item.workTime[i] = -1;
+              gap--;
+            }
+          }
+          if (item.workTime.every((b) => b === work.off)) {
+            cantProvideDay.push(item.date);
+          }
+        });
+
+        tmp.forEach((item) => {
+          if (!item.active) return;
+          if (cantProvideDay.includes(item.day.toString())) {
+            item.active = false;
+          }
+        });
+      }
 
       return {
         ...state,

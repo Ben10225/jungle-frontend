@@ -7,8 +7,9 @@ import { faCircleRight } from "@fortawesome/free-solid-svg-icons";
 import styles from "./TimeBlock.module.css";
 import _ from "lodash";
 import { useDispatch } from "react-redux";
-import { setPart } from "../state/reserve/reserveSlice";
-import { setReserveTime } from "../state/reserve/reserveSlice";
+import { setPart, setReserveTime } from "../state/reserve/reserveSlice";
+import { useSelector } from "react-redux";
+import { RootState } from "../state/store.ts";
 
 interface TimeBlockProps {
   clickEvents: CLickEvents;
@@ -32,12 +33,13 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
   onUpdateWorkTime,
 }: TimeBlockProps): ReactElement => {
   const [selectIndex, setSelectIndex] = useState<number>(-1);
-  const [showReserveNullBlock, setShowReserveNullBlock] =
-    useState<boolean>(false);
   const [timeBlockState, timeBlockDispatch] = useReducer(
     timeBlockReducer,
     timeBlockInit
   );
+  const reserveItemsWholeTime = useSelector(
+    (state: RootState) => state.reserve.reserveItems
+  ).reduce((acc, curr) => (acc += curr.time), 0);
 
   const dispatch = useDispatch();
   const handleArrangePeriodClick = (newValue: number, index: number) => {
@@ -96,18 +98,15 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
     getTodayString(clickEvents.date);
     setSelectIndex(-1);
 
-    if (nowRoute === "reserve") {
-      console.log(fetchWorkTimeDatas);
+    console.log();
 
-      clickEvents.detect
-        ? setShowReserveNullBlock(true)
-        : setShowReserveNullBlock(false);
+    if (nowRoute === "reserve") {
       timeBlockDispatch({
         type: "SET_DATA",
         payload: {
           data: fetchWorkTimeDatas,
           nowRoute: nowRoute,
-          // add some value
+          bookingWholeHour: Math.ceil(reserveItemsWholeTime / 60),
         },
       });
     }
@@ -119,6 +118,7 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
           payload: {
             data: fetchWorkTimeDatas,
             nowRoute: nowRoute,
+            bookingWholeHour: Math.ceil(reserveItemsWholeTime / 60),
           },
         });
       }
@@ -130,30 +130,24 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
     if (!getFetchResponse) return;
     if (nowRoute === "reserve") {
       if (fetchWorkTimeDatas.length === 0) return;
-      getTodayString(clickEvents.date);
       timeBlockDispatch({
         type: "SET_DATA",
         payload: {
           data: fetchWorkTimeDatas,
           nowRoute: nowRoute,
+          bookingWholeHour: Math.ceil(reserveItemsWholeTime / 60),
         },
-      });
-
-      const tmpToday = clickEvents.date.split(" ");
-      fetchWorkTimeDatas.forEach((item) => {
-        if (
-          item.yymm === tmpToday[0] + "-" + tmpToday[1] &&
-          item.date === tmpToday[2]
-        ) {
-          setShowReserveNullBlock(true);
-        }
       });
     }
 
     if (nowRoute === "admin") {
       timeBlockDispatch({
         type: "SET_DATA",
-        payload: { data: fetchWorkTimeDatas, nowRoute: nowRoute },
+        payload: {
+          data: fetchWorkTimeDatas,
+          nowRoute: nowRoute,
+          bookingWholeHour: Math.ceil(reserveItemsWholeTime / 60),
+        },
       });
 
       timeBlockDispatch({
@@ -174,6 +168,7 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
         payload: {
           data: fetchWorkTimeDatas,
           nowRoute: nowRoute,
+          bookingWholeHour: Math.ceil(reserveItemsWholeTime / 60),
         },
       });
 
@@ -269,7 +264,7 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
                   );
                 })}
               </div>
-              {showReserveNullBlock && <div className={styles.nullBlock}></div>}
+              <div className={styles.nullBlock}></div>
             </>
           )}
           {/* admin */}

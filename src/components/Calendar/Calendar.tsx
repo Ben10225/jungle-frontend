@@ -3,6 +3,8 @@ import { reducer, WorkTimeData, months } from "./CalenderNeeds";
 import { CLickEvents, work } from "../Constant";
 import PrevNextBtn from "./PrevNextBtn";
 import styles from "./Calendar.module.css";
+import { useSelector } from "react-redux";
+import { RootState } from "../state/store.ts";
 import {
   dayElement,
   daysElementState,
@@ -38,6 +40,10 @@ const Calender: React.FC<CalendarProps> = ({
     thisMonth: -1,
     nextMonth: -1,
   });
+
+  const reserveItemsWholeTime = useSelector(
+    (state: RootState) => state.reserve.reserveItems
+  ).reduce((acc, curr) => (acc += curr.time), 0);
 
   const initialState: daysElementState = {
     days: [
@@ -227,7 +233,10 @@ const Calender: React.FC<CalendarProps> = ({
       setClickTmp("");
       dispatch({
         type: "RESERVE_CLICK",
-        payload: { data: fetchWorkTimeDatas },
+        payload: {
+          data: fetchWorkTimeDatas,
+          bookingWholeHour: Math.ceil(reserveItemsWholeTime / 60),
+        },
       });
     }
     if (nowRoute === "admin") {
@@ -246,7 +255,10 @@ const Calender: React.FC<CalendarProps> = ({
         });
         dispatch({
           type: "RESERVE_CLICK",
-          payload: { data: fetchWorkTimeDatas },
+          payload: {
+            data: fetchWorkTimeDatas,
+            bookingWholeHour: Math.ceil(reserveItemsWholeTime / 60),
+          },
         });
 
         const todayData = fetchWorkTimeDatas.find(

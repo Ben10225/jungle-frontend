@@ -39,9 +39,9 @@ const ReserveSectionBooking = () => {
 
   const getReserveTimeString = (): string[] => {
     const d = `${reserveTime.date[0]} - ${reserveTime.date[1]} - ${reserveTime.date[2]}`;
-    const t = `${reserveTime.clock > 1 ? "下午" : "上午"} ${
-      reserveTime.clock + 10
-    }:00`;
+    const t = `${
+      reserveTime.clock === 2 ? "中午" : reserveTime.clock > 2 ? "下午" : "上午"
+    } ${reserveTime.clock + 10}:00`;
     return [d, t];
   };
 

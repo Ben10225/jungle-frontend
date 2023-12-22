@@ -26,6 +26,7 @@ interface SetDataAcrion {
   payload: {
     data: WorkTimeData[];
     nowRoute: string;
+    bookingWholeHour: number;
   };
 }
 
@@ -180,6 +181,34 @@ export const timeBlockReducer = (state: timeBlockData, action: Action) => {
           return {
             ...state,
             today: [],
+          };
+        }
+
+        // if appointment whole time > 1 hour, close the between time
+        const hour = action.payload.bookingWholeHour;
+        if (hour !== 1 && matchingItem) {
+          const extra = hour - 1;
+          const endIndex = matchingItem.workTime.length - 1 - extra;
+          const tmp = _.cloneDeep(matchingItem.workTime);
+          let gap = 0;
+          for (let i = 0; i < tmp.length; i++) {
+            if (i > endIndex) {
+              tmp[i] = -1;
+              continue;
+            }
+            if (gap !== 0) {
+              tmp[i] = -1;
+              gap--;
+            }
+            if (tmp[i + extra] !== 1) {
+              gap = extra;
+              tmp[i] = -1;
+              gap--;
+            }
+          }
+          return {
+            ...state,
+            workTime: tmp,
           };
         }
 
