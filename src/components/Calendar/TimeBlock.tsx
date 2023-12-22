@@ -2,8 +2,13 @@ import { ReactElement, useState, useEffect, useReducer } from "react";
 import { WorkTimeData } from "./CalenderNeeds";
 import { work, CLickEvents } from "../Constant";
 import { timeBlockReducer, timeBlockInit } from "./TimeBlockNeeds";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleRight } from "@fortawesome/free-solid-svg-icons";
 import styles from "./TimeBlock.module.css";
 import _ from "lodash";
+import { useDispatch } from "react-redux";
+import { setPart } from "../state/reserve/reserveSlice";
+import { setReserveTime } from "../state/reserve/reserveSlice";
 
 interface TimeBlockProps {
   clickEvents: CLickEvents;
@@ -34,6 +39,7 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
     timeBlockInit
   );
 
+  const dispatch = useDispatch();
   const handleArrangePeriodClick = (newValue: number, index: number) => {
     timeBlockDispatch({
       type: "UPDATE_ITEM",
@@ -76,11 +82,23 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
     }
   };
 
+  const handleToReserve = () => {
+    const reserveData = {
+      date: timeBlockState.today,
+      clock: selectIndex,
+    };
+
+    dispatch(setReserveTime(reserveData));
+    dispatch(setPart("part3"));
+  };
+
   useEffect(() => {
     getTodayString(clickEvents.date);
     setSelectIndex(-1);
 
     if (nowRoute === "reserve") {
+      console.log(fetchWorkTimeDatas);
+
       clickEvents.detect
         ? setShowReserveNullBlock(true)
         : setShowReserveNullBlock(false);
@@ -89,6 +107,7 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
         payload: {
           data: fetchWorkTimeDatas,
           nowRoute: nowRoute,
+          // add some value
         },
       });
     }
@@ -203,7 +222,18 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
       <div className="w-4/5">
         <hr className="w-full mb-4" />
         <div className={styles.timeWrapper}>
-          <div className="today-block">
+          <div className={styles.todayBlock}>
+            {nowRoute === "reserve" && timeBlockState.today.length > 0 && (
+              <div
+                className={`${styles.submitBlock}  ${
+                  selectIndex > -1 ? `${styles.click}` : ""
+                }`}
+                onClick={() => handleToReserve()}
+              >
+                <div className={`${styles.submit}`}>點擊預約</div>
+                <FontAwesomeIcon className={styles.icon} icon={faCircleRight} />
+              </div>
+            )}
             <span>{timeBlockState.today[0]}</span>
             {timeBlockState.today.length > 0 && (
               <span style={{ margin: "0px 2px" }}>-</span>
@@ -213,11 +243,16 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
               <span style={{ margin: "0px 2px" }}>-</span>
             )}
             <span>{timeBlockState.today[2]}</span>
+            {nowRoute === "reserve" && selectIndex > -1 && (
+              <span className={styles.reserveTime}>{` ${
+                selectIndex + 10
+              }:00`}</span>
+            )}
           </div>
           {/* reserver */}
           {nowRoute === "reserve" && (
             <>
-              <div className={styles.selectBlock}>
+              <div className={`${styles.selectBlock} mt-3`}>
                 {timeBlockState.workTime.map((state, i) => {
                   return (
                     state === work.on && (

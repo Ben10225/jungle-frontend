@@ -1,0 +1,67 @@
+.wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.block {
+  width: 80%;
+  margin-top: 30px;
+}
+
+h4 {
+  width: 100%;
+  text-align: center;
+  font-size: 18px !important;
+  color: rgb(104, 8, 8);
+}
+
+.line {
+  margin-top: 20px;
+}
+
+.line p {
+  font-size: 16px;
+  color: rgb(96, 88, 82);
+}
+
+.line p.title {
+  font-size: 14px;
+  color: #a13b3bdf;
+}
+
+.line p.clock {
+  display: inline-block;
+  margin-right: 20px;
+}
+
+.line p.spendTime {
+  font-size: 12px;
+  opacity: 0.5;
+  margin-top: 3px;
+}
+
+.buttons {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.buttons div {
+  margin: 50px 25px 0 25px;
+  padding: 4px 11px;
+  border-radius: 7px;
+  font-size: 18px;
+}
+
+.buttons div.appoint {
+  /* border: 1px solid rgb(104, 8, 8); */
+  background-color: rgb(193, 141, 101);
+  color: #fff;
+  font-weight: 300;
+}
+
+.buttons div.cancel {
+  border: 1px solid #9a9a9a;
+  color: #9a9a9a;
+  opacity: 0.7;
+}

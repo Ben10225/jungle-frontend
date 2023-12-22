@@ -1,8 +1,8 @@
 .calendar {
   font-family: "Poppins", sans-serif;
   padding: 20px;
-  height: 460px;
-  padding-top: 12px;
+  height: 420px;
+  padding-top: 0px;
   position: relative;
 }
 
@@ -15,23 +15,6 @@
 .titlemonth {
   font-size: 25px;
   color: #6c3b1c;
-}
-
-.calendar header .icons span {
-  height: 38px;
-  width: 38px;
-  margin: 0 1px;
-  cursor: pointer;
-  color: #878787;
-  text-align: center;
-  line-height: 38px;
-  font-size: 1.9rem;
-  user-select: none;
-  border-radius: 50%;
-}
-
-.calendar header .icons span.inactive {
-  color: #ddd;
 }
 
 .calendar ul {
@@ -47,7 +30,7 @@
 
 .calendar .days li {
   cursor: pointer;
-  margin-top: 10px;
+  margin-top: 7px;
   z-index: 1;
   padding: 7px;
 }

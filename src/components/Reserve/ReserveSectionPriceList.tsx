@@ -9,7 +9,7 @@ import {
 import { faClock } from "@fortawesome/free-regular-svg-icons";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { setPart } from "../state/reserve/reserveSlice";
+import { setPart, setReserveItems } from "../state/reserve/reserveSlice";
 
 interface Service {
   title: string;
@@ -19,9 +19,9 @@ interface Service {
 }
 
 const ReserveSectionPriceList = () => {
+  const dispatch = useDispatch();
   const [serviceList, setServiceList] = useState<Service[]>(priceList);
   const [clickToCalendar, setClickToCalendar] = useState<boolean>(false);
-  const dispatch = useDispatch();
 
   const handleClick = (i: number) => {
     let noCLick = true;
@@ -51,18 +51,9 @@ const ReserveSectionPriceList = () => {
     const clickItems = getClickedItems();
     if (clickItems[0] === 0) return;
 
+    const bookingItems = serviceList.filter((item) => item.clicked);
+    dispatch(setReserveItems(bookingItems));
     dispatch(setPart("part2"));
-  };
-
-  const getServiceTimeSpend = (n: number): string => {
-    if (n < 60) return `${n} 分鐘`;
-    let hr = 0;
-    let minute = n;
-    while (minute >= 60) {
-      minute -= 60;
-      hr++;
-    }
-    return minute === 0 ? `${hr} 小時` : `${hr} 小時 ${minute} 分鐘`;
   };
 
   const getClickedItems = (): number[] => {
@@ -93,7 +84,7 @@ const ReserveSectionPriceList = () => {
               <div className={styles.description}>
                 <div className={styles.time}>
                   <FontAwesomeIcon className={styles.icon} icon={faClock} />
-                  <span>{getServiceTimeSpend(item.time)}</span>
+                  <span>{GetServiceTimeSpend(item.time)}</span>
                 </div>
                 <div className={styles.price}>
                   <FontAwesomeIcon
@@ -113,7 +104,7 @@ const ReserveSectionPriceList = () => {
           <div className={styles.count}>
             <p className={styles.first}>已選 {getClickedItems()[0]} 項服務：</p>
             <p>
-              {getServiceTimeSpend(getClickedItems()[1])} /{" "}
+              {GetServiceTimeSpend(getClickedItems()[1])} /{" "}
               {getClickedItems()[2]} 元
             </p>
             <p className={styles.clear} onClick={() => handleClear()}>
@@ -179,3 +170,14 @@ const priceList: Service[] = [
     clicked: false,
   },
 ];
+
+export const GetServiceTimeSpend = (n: number): string => {
+  if (n < 60) return `${n} 分鐘`;
+  let hr = 0;
+  let minute = n;
+  while (minute >= 60) {
+    minute -= 60;
+    hr++;
+  }
+  return minute === 0 ? `${hr} 小時` : `${hr} 小時 ${minute} 分鐘`;
+};

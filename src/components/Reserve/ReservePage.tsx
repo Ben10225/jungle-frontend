@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import ReserveSectionCalendar from "./ReserveSectionCalendar.tsx";
 import ReserveSectionPriceList from "./ReserveSectionPriceList.tsx";
+import ReserveSectionBooking from "./ReserveSectionBooking.tsx";
 import styles from "./ReservePage.module.css";
 import { useSelector } from "react-redux";
 import { RootState } from "../state/store.ts";
@@ -28,13 +29,19 @@ const ReservePage: React.FC = () => {
             2
           </div>
           <div>·</div>
-          <div className={styles.circle}>3</div>
+          <div
+            className={`${styles.circle} ${
+              part === "part3" ? styles.show : ""
+            }`}
+          >
+            3
+          </div>
         </div>
         <hr />
       </header>
       {part === "part1" && <ReserveSectionPriceList />}
       {part === "part2" && <ReserveSectionCalendar />}
-      {part === "part3" && <div></div>}
+      {part === "part3" && <ReserveSectionBooking />}
     </div>
   );
 };

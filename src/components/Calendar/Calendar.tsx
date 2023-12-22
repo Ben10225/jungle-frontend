@@ -1,6 +1,6 @@
 import { useState, useEffect, useReducer } from "react";
 import { reducer, WorkTimeData, months } from "./CalenderNeeds";
-import { CLickEvents } from "../Constant";
+import { CLickEvents, work } from "../Constant";
 import PrevNextBtn from "./PrevNextBtn";
 import styles from "./Calendar.module.css";
 import {
@@ -14,6 +14,7 @@ interface CalendarProps {
   onTodayDataChange: (data: CLickEvents) => void;
   onPageChange: (data: number) => void;
   fetchWorkTimeDatas: WorkTimeData[];
+  getFetchResponse: boolean;
   nowRoute: string;
   mode: string;
 }
@@ -24,12 +25,14 @@ const Calender: React.FC<CalendarProps> = ({
   fetchWorkTimeDatas,
   nowRoute,
   mode,
+  getFetchResponse,
 }) => {
   let clickDetect: boolean = false;
 
   const [firstLoad, setFirstLoad] = useState<boolean>(true);
   const [clientPage, setClientPage] = useState<number>(0);
   const [nowDate, setNowDate] = useState<Date>(new Date());
+  const [clickTmp, setClickTmp] = useState<string>("");
   const [clickDay, setClickDay] = useState<clickDay>({
     today: -1,
     thisMonth: -1,
@@ -151,6 +154,10 @@ const Calender: React.FC<CalendarProps> = ({
 
   const handleClick = (index: number, item: dayElement) => {
     if (!item.active) return;
+    const str: string = `${date.currYear} ${date.currMonth + 1} ${item.day}`;
+
+    // prevent repeat click same day
+    if (str === clickTmp) return;
 
     dispatch({
       type: "UPDATE_DATE_CLICK",
@@ -158,8 +165,8 @@ const Calender: React.FC<CalendarProps> = ({
     });
 
     clickDetect = true;
-    const str: string = `${date.currYear} ${date.currMonth + 1} ${item.day}`;
     onTodayDataChange({ detect: clickDetect, date: str });
+    setClickTmp(str);
     clickDetect = false;
   };
 
@@ -207,24 +214,6 @@ const Calender: React.FC<CalendarProps> = ({
   };
 
   useEffect(() => {
-    // renderCalendar();
-    if (firstLoad) {
-      onTodayDataChange({
-        detect: false,
-        date: `${date.currYear} ${date.currMonth + 1} ${date.currDate}`,
-      });
-      if (nowRoute === "reserve") {
-        dispatch({
-          type: "RESERVE_CLICK",
-          payload: { data: fetchWorkTimeDatas },
-        });
-      }
-      setFirstLoad(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
     setDate({
       currYear: nowDate.getFullYear(),
       currMonth: nowDate.getMonth(),
@@ -235,6 +224,7 @@ const Calender: React.FC<CalendarProps> = ({
   useEffect(() => {
     if (nowRoute === "reserve") {
       renderCalendar();
+      setClickTmp("");
       dispatch({
         type: "RESERVE_CLICK",
         payload: { data: fetchWorkTimeDatas },
@@ -247,13 +237,37 @@ const Calender: React.FC<CalendarProps> = ({
   }, [clientPage]);
 
   useEffect(() => {
-    if (nowRoute === "reserve")
-      dispatch({
-        type: "RESERVE_CLICK",
-        payload: { data: fetchWorkTimeDatas },
-      });
+    if (getFetchResponse) {
+      if (nowRoute === "reserve") {
+        firstLoad && setFirstLoad(false);
+        onTodayDataChange({
+          detect: false,
+          date: `${date.currYear} ${date.currMonth + 1} ${date.currDate}`,
+        });
+        dispatch({
+          type: "RESERVE_CLICK",
+          payload: { data: fetchWorkTimeDatas },
+        });
+
+        const todayData = fetchWorkTimeDatas.find(
+          (item) =>
+            item.yymm === `${date.currYear}-${date.currMonth + 1}` &&
+            item.date === `${date.currDate}`
+        );
+
+        if (
+          todayData !== undefined &&
+          !todayData.workTime.every((b) => b === work.off) &&
+          firstLoad
+        ) {
+          setClickTmp(
+            `${date.currYear} ${date.currMonth + 1} ${date.currDate}`
+          );
+        }
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchWorkTimeDatas]);
+  }, [getFetchResponse]);
 
   useEffect(() => {
     // click mode button
@@ -265,7 +279,7 @@ const Calender: React.FC<CalendarProps> = ({
 
   return (
     <div className={styles.calendar}>
-      <header className="flex items-center justify-between p-5 mb-2">
+      <header className="flex items-center justify-between p-5">
         <div>
           <span className={styles.titleyear}>{date.currYear}</span>
           <span className={styles.titlemonth}>{months[date.currMonth]}</span>

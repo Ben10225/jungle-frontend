@@ -21,9 +21,7 @@ const ReserveSectionCalendar: React.FC = () => {
     detect: false,
     date: "",
   });
-  const [forChildSureData, setForChildSureData] = useState<WorkTimeData[]>([
-    { yymm: "", date: "", workTime: [] },
-  ]);
+  const [forChildSureData, setForChildSureData] = useState<WorkTimeData[]>([]);
   const [sureTimeData, setSureTimeData] = useState<ResData>({
     result: {
       thisMonth: [
@@ -52,7 +50,6 @@ const ReserveSectionCalendar: React.FC = () => {
       ? setForChildSureData(sureTimeData.result.nextMonth)
       : setForChildSureData(sureTimeData.result.thisMonth);
     setDataFromCalendar({ detect: false, date: "" });
-
     setPage(pg);
   };
 
@@ -101,6 +98,7 @@ const ReserveSectionCalendar: React.FC = () => {
           <Calendar
             onTodayDataChange={handleTodayDataChange}
             onPageChange={handlePageChange}
+            getFetchResponse={getFetchResponse}
             fetchWorkTimeDatas={forChildSureData}
             nowRoute={nowRoute}
             mode={""}

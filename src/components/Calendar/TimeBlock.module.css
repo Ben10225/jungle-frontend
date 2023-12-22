@@ -7,10 +7,13 @@
 
 .timeWrapper .selectBlock .time {
   margin-top: 14px;
-  /* border: 1px solid #000; */
   border-radius: 8px;
   padding: 5px;
   background-color: #fff;
+}
+
+.todayBlock {
+  position: relative;
 }
 
 .time.select {
@@ -18,8 +21,43 @@
   color: #fff;
 }
 
+.todayBlock span {
+  font-size: 14px;
+  color: #777;
+  position: relative;
+  top: 2px;
+}
+
+.reserveTime {
+  margin-left: 5px;
+}
+
 .time.stop {
   opacity: 0.2;
+}
+
+.submitBlock {
+  width: 90px;
+  display: flex;
+  justify-content: space-around;
+  color: #9d4a13;
+  position: absolute;
+  right: 0;
+  top: 2px;
+  opacity: 0.2;
+}
+
+.submitBlock.click {
+  opacity: 1;
+}
+
+.submit {
+  width: 100px;
+}
+
+.icon {
+  position: relative;
+  top: 4px;
 }
 
 .nullBlock {
