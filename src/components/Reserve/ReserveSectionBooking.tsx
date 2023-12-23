@@ -2,6 +2,8 @@ import { useSelector } from "react-redux";
 import { RootState } from "../state/store.ts";
 import styles from "./ReserveSectionBooking.module.css";
 import { GetServiceTimeSpend } from "./ReserveSectionPriceList.tsx";
+import axios from "axios";
+import { ENDPOINT } from "../../App";
 
 const ReserveSectionBooking = () => {
   const reserveItems = useSelector(
@@ -50,7 +52,37 @@ const ReserveSectionBooking = () => {
   };
 
   // add to db booking
-  const submitBooking = () => {};
+  const submitBooking = async () => {
+    const reviseAvailData = {
+      yymm: reserveTime.date[0] + "-" + reserveTime.date[1],
+      date: reserveTime.date[2],
+      hourIndex: reserveTime.clock,
+      wholeHour: Math.ceil(getSpentTime() / 60),
+    };
+    const addReserve = {
+      titles: reserveItems.map((item) => item.title),
+      time: GetServiceTimeSpend(getSpentTime()),
+      cost: getReserveCosts().toString(),
+      hourIndex: reserveTime.clock,
+      wholeHour: Math.ceil(getSpentTime() / 60),
+    };
+
+    try {
+      const response = await axios.post<{ result: string }>(
+        `${ENDPOINT}/reserve`,
+        {
+          reviseAvailable: reviseAvailData,
+          addReserve: addReserve,
+        }
+      );
+
+      console.log(response.data.result);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      // console.log(respon)
+    }
+  };
 
   return (
     <>

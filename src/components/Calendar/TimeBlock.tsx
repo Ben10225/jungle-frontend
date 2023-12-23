@@ -32,6 +32,7 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
   updateBtnClick,
   onUpdateWorkTime,
 }: TimeBlockProps): ReactElement => {
+  const dispatch = useDispatch();
   const [selectIndex, setSelectIndex] = useState<number>(-1);
   const [timeBlockState, timeBlockDispatch] = useReducer(
     timeBlockReducer,
@@ -41,7 +42,6 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
     (state: RootState) => state.reserve.reserveItems
   ).reduce((acc, curr) => (acc += curr.time), 0);
 
-  const dispatch = useDispatch();
   const handleArrangePeriodClick = (newValue: number, index: number) => {
     timeBlockDispatch({
       type: "UPDATE_ITEM",

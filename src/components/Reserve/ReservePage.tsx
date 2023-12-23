@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import ReserveSectionCalendar from "./ReserveSectionCalendar.tsx";
 import ReserveSectionPriceList from "./ReserveSectionPriceList.tsx";
 import ReserveSectionBooking from "./ReserveSectionBooking.tsx";
@@ -8,7 +7,6 @@ import { RootState } from "../state/store.ts";
 
 const ReservePage: React.FC = () => {
   const part = useSelector((state: RootState) => state.reserve.part);
-
   return (
     <div className={styles.wrapper}>
       <header>
