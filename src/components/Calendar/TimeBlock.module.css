@@ -12,6 +12,23 @@
   background-color: #fff;
 }
 
+.timeWrapper .selectBlock .adminTime {
+  margin-top: 14px;
+  border-radius: 8px;
+  padding: 5px;
+  background-color: #fff;
+  border: 1px solid #000;
+}
+
+.timeWrapper .selectBlock .adminTime.stop {
+  opacity: 0.2;
+}
+
+.timeWrapper .selectBlock .adminTime.lock {
+  background-color: rgb(225, 115, 115);
+  color: #fff;
+}
+
 .todayBlock {
   position: relative;
 }

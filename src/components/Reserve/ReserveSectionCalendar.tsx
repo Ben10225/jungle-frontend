@@ -62,7 +62,7 @@ const ReserveSectionCalendar: React.FC = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get<ResData>(
-          `${ENDPOINT}/available?r=${nowRoute}&thisMonth=${thisMonth}&nextMonth=${nextMonth}`
+          `${ENDPOINT}/available?thisMonth=${thisMonth}&nextMonth=${nextMonth}`
         );
 
         const thisM =

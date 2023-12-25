@@ -3,14 +3,38 @@ import Calendar from "../Calendar/Calendar";
 import TimeBlock from "../Calendar/TimeBlock";
 import { useState, useEffect } from "react";
 import { ENDPOINT } from "../../App";
-import { WorkTimeData } from "../Calendar/CalenderNeeds";
+import { WorkTimeData, BookingData } from "../Calendar/CalenderNeeds";
 import { CLickEvents, getMonthUrlQuery } from "../Constant";
+import styles from "./AdminCalPage.module.css";
+import { useDispatch } from "react-redux";
+import { setBookingData } from "../state/booking/bookingSlice";
 
-interface ResData {
+interface ResAvailable {
   result: {
     thisMonth: WorkTimeData[];
     nextMonth: WorkTimeData[];
     theMonthAfterNext: WorkTimeData[];
+  };
+}
+
+// interface ResBookings {
+//   bookings: {
+//     thisMonth: BookingData[];
+//     nextMonth: BookingData[];
+//     theMonthAfterNext: BookingData[];
+//   };
+// }
+
+interface ResAdminData {
+  workTime: {
+    thisMonth: WorkTimeData[];
+    nextMonth: WorkTimeData[];
+    theMonthAfterNext: WorkTimeData[];
+  };
+  bookings: {
+    thisMonth: BookingData[];
+    nextMonth: BookingData[];
+    theMonthAfterNext: BookingData[];
   };
 }
 
@@ -24,12 +48,13 @@ interface ResPostData {
 }
 
 const AdminCalPage: React.FC = () => {
+  const dispatch = useDispatch();
   const nowRoute = "admin";
   const [page, setPage] = useState(0);
-  const [isChecked, setChecked] = useState(false);
   const [updateBtnClick, setUpdateBtnClick] = useState(false);
   const [getFetchResponse, setGetFetchResponse] = useState(false);
-  const [mode, setMode] = useState<string>("SHOWRESERVED");
+  const [mode, setMode] = useState<string>("BOOKS");
+  // const [mode, setMode] = useState<string>("SHIFTS");
   const [dataFromCalendar, setDataFromCalendar] = useState<CLickEvents>({
     detect: false,
     date: "",
@@ -40,7 +65,7 @@ const AdminCalPage: React.FC = () => {
     update: [],
   });
 
-  const [sureTimeData, setSureTimeData] = useState<ResData>({
+  const [sureTimeData, setSureTimeData] = useState<ResAvailable>({
     result: {
       thisMonth: [
         {
@@ -103,17 +128,17 @@ const AdminCalPage: React.FC = () => {
     return [thisMonth, nextMonth, theMonthAfterNext];
   };
 
-  const handleCheckboxChange = () => {
-    setChecked(!isChecked);
-    if (!isChecked) {
-      setMode("ARRANGE");
+  const handleModeChange = (clickBtnMode: string) => {
+    if (clickBtnMode === mode) return;
+    if (clickBtnMode === "BOOKS") {
+      setMode("BOOKS");
     } else {
-      setMode("SHOWRESERVED");
+      setMode("SHIFTS");
     }
   };
 
   const handleUpdateArrangeData = () => {
-    if (!isChecked) return;
+    if (mode === "BOOKS") return;
     setUpdateBtnClick(true);
     setTimeout(() => setUpdateBtnClick(false));
   };
@@ -124,39 +149,59 @@ const AdminCalPage: React.FC = () => {
     const thisMonth = getMonth()[0];
     const nextMonth = getMonth()[1];
     const theMonthAfterNext = getMonth()[2];
-    const fetchData = async () => {
+    const fetchAdminData = async () => {
       try {
-        const response = await axios.get<ResData>(
-          `${ENDPOINT}/available?r=${nowRoute}&thisMonth=${thisMonth}&nextMonth=${nextMonth}&theMonthAfterNext=${theMonthAfterNext}`
+        const response = await axios.get<ResAdminData>(
+          `${ENDPOINT}/admin?thisMonth=${thisMonth}&nextMonth=${nextMonth}&theMonthAfterNext=${theMonthAfterNext}`
         );
-        const thisM =
-          response.data.result.thisMonth === null
+        const thisMWorkTime =
+          response.data.workTime.thisMonth === null
             ? []
-            : response.data.result.thisMonth;
-        const nextM =
-          response.data.result.nextMonth === null
+            : response.data.workTime.thisMonth;
+        const nextMWorkTime =
+          response.data.workTime.nextMonth === null
             ? []
-            : response.data.result.nextMonth;
-        const afterM =
-          response.data.result.theMonthAfterNext === null
+            : response.data.workTime.nextMonth;
+        const afterMWorkTime =
+          response.data.workTime.theMonthAfterNext === null
             ? []
-            : response.data.result.theMonthAfterNext;
+            : response.data.workTime.theMonthAfterNext;
 
         setSureTimeData({
           result: {
-            thisMonth: thisM,
-            nextMonth: nextM,
-            theMonthAfterNext: afterM,
+            thisMonth: thisMWorkTime,
+            nextMonth: nextMWorkTime,
+            theMonthAfterNext: afterMWorkTime,
           },
         });
-        setForChildSureData(thisM);
+
+        const thisMBooking =
+          response.data.bookings.thisMonth === null
+            ? []
+            : response.data.bookings.thisMonth;
+        const nextMBooking =
+          response.data.bookings.nextMonth === null
+            ? []
+            : response.data.bookings.nextMonth;
+        const afterMBooking =
+          response.data.bookings.theMonthAfterNext === null
+            ? []
+            : response.data.bookings.theMonthAfterNext;
+        dispatch(
+          setBookingData({
+            thisMonth: thisMBooking,
+            nextMonth: nextMBooking,
+            theMonthAfterNext: afterMBooking,
+          })
+        );
+        setForChildSureData(thisMWorkTime);
       } catch (error) {
         console.log(error);
       } finally {
         setGetFetchResponse(true);
       }
     };
-    fetchData();
+    fetchAdminData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -188,6 +233,23 @@ const AdminCalPage: React.FC = () => {
 
   return (
     <>
+      <header>
+        <div className={styles.selects}>
+          {buttons.map((item, i) => {
+            return (
+              <div
+                key={i}
+                onClick={() => handleModeChange(item.mode)}
+                className={`${styles.button} ${styles.books} ${
+                  mode === item.mode ? styles.active : ""
+                }`}
+              >
+                {item.title}
+              </div>
+            );
+          })}
+        </div>
+      </header>
       <main>
         <div className="calendar-wrapper">
           <div className="calendar-outter">
@@ -195,6 +257,7 @@ const AdminCalPage: React.FC = () => {
               onTodayDataChange={handleTodayDataChange}
               onPageChange={handlePageChange}
               fetchWorkTimeDatas={forChildSureData}
+              getFetchResponse={getFetchResponse}
               nowRoute={nowRoute}
               mode={mode}
             />
@@ -208,19 +271,21 @@ const AdminCalPage: React.FC = () => {
               page={page}
               mode={mode}
             />
-            <input
-              type="checkbox"
-              checked={isChecked}
-              onChange={handleCheckboxChange}
-              className="w-6 h-6 left-12 top-12 relative"
-            />
-            <button
-              type="button"
-              className="relative top-10 left-20 text-white bg-blue-700 outline-none font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600"
-              onClick={() => handleUpdateArrangeData()}
-            >
-              update data
-            </button>
+            {mode === "SHIFTS" && (
+              <div className={styles.adminBtns}>
+                <div className={`${styles.adminBtnSmall} ${styles.many}`}>
+                  多選
+                </div>
+                <div className={styles.adminBtnSmall}>全選</div>
+                <div className={styles.adminBtnSmall}>全消</div>
+                <div
+                  className={styles.submitBtn}
+                  onClick={() => handleUpdateArrangeData()}
+                >
+                  班表上傳
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>
@@ -229,3 +294,16 @@ const AdminCalPage: React.FC = () => {
 };
 
 export default AdminCalPage;
+
+const buttons = [
+  {
+    id: 0,
+    title: "訂單模式",
+    mode: "BOOKS",
+  },
+  {
+    id: 1,
+    title: "排班模式",
+    mode: "SHIFTS",
+  },
+];

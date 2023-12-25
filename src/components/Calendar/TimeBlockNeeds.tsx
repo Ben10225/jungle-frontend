@@ -317,7 +317,7 @@ export const timeBlockReducer = (state: timeBlockData, action: Action) => {
     }
     case "CHANGE_MODE": {
       const m =
-        action.payload.str === "SHOWRESERVED"
+        action.payload.str === "BOOKS"
           ? {
               showReserved: true,
               arrange: false,

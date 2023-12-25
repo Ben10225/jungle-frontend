@@ -65,7 +65,8 @@
 
 .day {
   font-weight: 300 !important;
-  color: red;
+  position: relative;
+  /* border: 1px solid #000; */
 }
 
 .days .day.isToday {
@@ -82,4 +83,15 @@
 
 .days li.clicked::before {
   background-color: #9f5c38;
+}
+
+.hasBooking {
+  background-color: red;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  position: absolute;
+  left: 50%;
+  top: 90%;
+  transform: translate(-50%, -50%);
 }

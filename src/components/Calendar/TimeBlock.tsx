@@ -43,6 +43,8 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
   ).reduce((acc, curr) => (acc += curr.time), 0);
 
   const handleArrangePeriodClick = (newValue: number, index: number) => {
+    if (newValue === 0) return;
+
     timeBlockDispatch({
       type: "UPDATE_ITEM",
       payload: { index: index, newValue: newValue },
@@ -71,12 +73,12 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
   };
 
   const handleArrangeTableRander = () => {
-    if (mode === "ARRANGE") {
+    if (mode === "SHIFTS") {
       timeBlockDispatch({
         type: "CLEAN_TABLE",
         payload: { str: "TODAY" },
       });
-    } else if (mode === "SHOWRESERVED") {
+    } else if (mode === "BOOKS") {
       timeBlockDispatch({
         type: "CLEAN_TABLE",
         payload: { str: "TODAY&WORKTABLE" },
@@ -97,8 +99,6 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
   useEffect(() => {
     getTodayString(clickEvents.date);
     setSelectIndex(-1);
-
-    console.log();
 
     if (nowRoute === "reserve") {
       timeBlockDispatch({
@@ -268,22 +268,28 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
             </>
           )}
           {/* admin */}
-          {nowRoute === "admin" && mode === "ARRANGE" && (
-            <div className={styles.selectblock}>
-              {timeBlockState.workTime.map((state, i) => {
-                return (
-                  <div
-                    onClick={() => handleArrangePeriodClick(state, i)}
-                    key={i}
-                    className={`${styles.time} ${
-                      state === work.off ? `${styles.stop}` : ""
-                    } `}
-                  >
-                    {i + 10}:00
-                  </div>
-                );
-              })}
-            </div>
+          {nowRoute === "admin" && mode === "SHIFTS" && (
+            <>
+              <div className={styles.selectBlock}>
+                {timeBlockState.workTime.map((state, i) => {
+                  return (
+                    <div
+                      onClick={() => handleArrangePeriodClick(state, i)}
+                      key={i}
+                      className={`${styles.adminTime} ${
+                        state === work.off
+                          ? `${styles.stop}`
+                          : state === work.reserved
+                          ? `${styles.lock}`
+                          : ""
+                      }`}
+                    >
+                      {i + 10}:00
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       </div>

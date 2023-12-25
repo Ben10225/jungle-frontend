@@ -1,5 +1,5 @@
 import { work } from "../Constant";
-import _ from "lodash";
+import _, { cloneDeep } from "lodash";
 
 export interface dayElement {
   day: number;
@@ -31,6 +31,17 @@ export interface WorkTimeData {
 }
 [];
 
+export interface BookingData {
+  yymm: string;
+  date: string;
+  cost: string;
+  time: string;
+  hourIndex: number;
+  wholeHour: number;
+  titles: string[];
+}
+[];
+
 interface UpdateDateAction {
   type: "UPDATE_DATE_CLICK";
   payload: { index: number; nowRoute: string };
@@ -45,9 +56,18 @@ interface ClearClickAcyion {
   type: "CLEAR_CLICK";
 }
 
+interface ClearALLClickAcyion {
+  type: "CLEAR_ALL_CLICK";
+}
+
 interface ReserveClickAction {
   type: "RESERVE_CLICK";
   payload: { data: WorkTimeData[]; bookingWholeHour: number };
+}
+
+interface BookingClickAction {
+  type: "BOOKING_CLICK";
+  payload: { data: BookingData[] };
 }
 
 interface AdminShowReservedAction {
@@ -58,7 +78,9 @@ export type Action =
   | UpdateDateAction
   | SetDataAction
   | ClearClickAcyion
+  | ClearALLClickAcyion
   | ReserveClickAction
+  | BookingClickAction
   | AdminShowReservedAction;
 
 export const reducer = (state: daysElementState, action: Action) => {
@@ -91,6 +113,16 @@ export const reducer = (state: daysElementState, action: Action) => {
           return item;
         }),
       };
+    case "CLEAR_ALL_CLICK": {
+      const tmp = cloneDeep(state.days);
+      tmp.forEach((item) => {
+        item.clicked = false;
+      });
+      return {
+        ...state,
+        days: tmp,
+      };
+    }
     case "RESERVE_CLICK": {
       // no data
       if (action.payload.data.length === 0) {
@@ -208,6 +240,25 @@ export const reducer = (state: daysElementState, action: Action) => {
         });
       }
 
+      return {
+        ...state,
+        days: tmp,
+      };
+    }
+    case "BOOKING_CLICK": {
+      const tmp = _.cloneDeep(state.days);
+      let pass: boolean = false;
+      tmp.forEach((item) => {
+        if (item.day === 1) pass = true;
+        if (!pass) return;
+        item.active = false;
+        for (let i = 0; i < action.payload.data.length; i++) {
+          if (item.day.toString() === action.payload.data[i].date) {
+            item.active = true;
+            break;
+          }
+        }
+      });
       return {
         ...state,
         days: tmp,

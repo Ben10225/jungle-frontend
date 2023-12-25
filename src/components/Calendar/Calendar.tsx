@@ -45,6 +45,8 @@ const Calender: React.FC<CalendarProps> = ({
     (state: RootState) => state.reserve.reserveItems
   ).reduce((acc, curr) => (acc += curr.time), 0);
 
+  const bookingStore = useSelector((state: RootState) => state.booking);
+
   const initialState: daysElementState = {
     days: [
       {
@@ -163,7 +165,7 @@ const Calender: React.FC<CalendarProps> = ({
     const str: string = `${date.currYear} ${date.currMonth + 1} ${item.day}`;
 
     // prevent repeat click same day
-    if (str === clickTmp) return;
+    if (str === clickTmp && nowRoute === "reserve") return;
 
     dispatch({
       type: "UPDATE_DATE_CLICK",
@@ -208,14 +210,25 @@ const Calender: React.FC<CalendarProps> = ({
 
   const adminCalendarRender = () => {
     // calendar showreserved & arrange mode change
-    if (mode === "SHOWRESERVED") {
+    // clear click first
+    if (mode === "BOOKS") {
       renderCalendar();
+      const data =
+        clientPage === 0
+          ? bookingStore.thisMonth
+          : clientPage === 1
+          ? bookingStore.nextMonth
+          : bookingStore.theMonthAfterNext;
       dispatch({
-        type: "ADMIN_SHOWRESERVED",
+        type: "BOOKING_CLICK",
+        payload: {
+          data: data,
+        },
       });
     }
-    if (mode === "ARRANGE") {
+    if (mode === "SHIFTS") {
       renderCalendar();
+      dispatch({ type: "CLEAR_ALL_CLICK" });
     }
   };
 
@@ -241,6 +254,20 @@ const Calender: React.FC<CalendarProps> = ({
     }
     if (nowRoute === "admin") {
       adminCalendarRender();
+      if (mode === "BOOKS") {
+        const data =
+          clientPage === 0
+            ? bookingStore.thisMonth
+            : clientPage === 1
+            ? bookingStore.nextMonth
+            : bookingStore.theMonthAfterNext;
+        dispatch({
+          type: "BOOKING_CLICK",
+          payload: {
+            data: data,
+          },
+        });
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientPage]);
@@ -276,6 +303,14 @@ const Calender: React.FC<CalendarProps> = ({
             `${date.currYear} ${date.currMonth + 1} ${date.currDate}`
           );
         }
+      }
+      if (nowRoute === "admin") {
+        dispatch({
+          type: "BOOKING_CLICK",
+          payload: {
+            data: bookingStore.thisMonth,
+          },
+        });
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -351,6 +386,7 @@ const Calender: React.FC<CalendarProps> = ({
                 onClick={() => handleClick(index, item)}
               >
                 {item.day}
+                {/* <div className={styles.hasBooking}></div> */}
               </li>
             );
           })}

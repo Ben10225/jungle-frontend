@@ -4,6 +4,7 @@ import styles from "./ReserveSectionBooking.module.css";
 import { GetServiceTimeSpend } from "./ReserveSectionPriceList.tsx";
 import axios from "axios";
 import { ENDPOINT } from "../../App";
+import { BookingData } from "../Calendar/CalenderNeeds.tsx";
 
 const ReserveSectionBooking = () => {
   const reserveItems = useSelector(
@@ -59,12 +60,14 @@ const ReserveSectionBooking = () => {
       hourIndex: reserveTime.clock,
       wholeHour: Math.ceil(getSpentTime() / 60),
     };
-    const addReserve = {
+    const addReserve: BookingData = {
       titles: reserveItems.map((item) => item.title),
       time: GetServiceTimeSpend(getSpentTime()),
       cost: getReserveCosts().toString(),
       hourIndex: reserveTime.clock,
       wholeHour: Math.ceil(getSpentTime() / 60),
+      yymm: reserveTime.date[0] + "-" + reserveTime.date[1],
+      date: reserveTime.date[2],
     };
 
     try {

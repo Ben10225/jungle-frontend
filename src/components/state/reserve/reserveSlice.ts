@@ -25,48 +25,48 @@ interface ReserveState {
 }
 
 const initialState: ReserveState = {
-  part: "part3",
+  part: "part1",
   user: {
     name: "彭宏倫",
     phone: "0912345678",
   },
-  // reserveTime: {
-  //   date: [],
-  //   clock: -1,
-  // },
-  // reserveItems: [],
-
   reserveTime: {
-    date: ["2023", "12", "25"],
-    clock: 0,
+    date: [],
+    clock: -1,
   },
-  reserveItems: [
-    {
-      title: "修眉毛",
-      time: 20,
-      cost: 1000,
-    },
-    {
-      title: "除鬍子",
-      time: 30,
-      cost: 1500,
-    },
-    // {
-    //   title: "除私密處",
-    //   time: 30,
-    //   cost: 3000,
-    // },
-    // {
-    //   title: "除鬍子",
-    //   time: 30,
-    //   cost: 1500,
-    // },
-    // {
-    //   title: "除私密處",
-    //   time: 30,
-    //   cost: 3000,
-    // },
-  ],
+  reserveItems: [],
+
+  // reserveTime: {
+  //   date: ["2023", "12", "26"],
+  //   clock: 0,
+  // },
+  // reserveItems: [
+  //   {
+  //     title: "修眉毛",
+  //     time: 20,
+  //     cost: 1000,
+  //   },
+  //   {
+  //     title: "除鬍子",
+  //     time: 30,
+  //     cost: 1500,
+  //   },
+  // {
+  //   title: "除私密處",
+  //   time: 30,
+  //   cost: 3000,
+  // },
+  // {
+  //   title: "除鬍子",
+  //   time: 30,
+  //   cost: 1500,
+  // },
+  // {
+  //   title: "除私密處",
+  //   time: 30,
+  //   cost: 3000,
+  // },
+  // ],
 };
 
 const reserveSlice = createSlice({
