@@ -223,6 +223,7 @@ const Calender: React.FC<CalendarProps> = ({
         type: "BOOKING_CLICK",
         payload: {
           data: data,
+          firstLoad: firstLoad,
         },
       });
     }
@@ -254,28 +255,14 @@ const Calender: React.FC<CalendarProps> = ({
     }
     if (nowRoute === "admin") {
       adminCalendarRender();
-      if (mode === "BOOKS") {
-        const data =
-          clientPage === 0
-            ? bookingStore.thisMonth
-            : clientPage === 1
-            ? bookingStore.nextMonth
-            : bookingStore.theMonthAfterNext;
-        dispatch({
-          type: "BOOKING_CLICK",
-          payload: {
-            data: data,
-          },
-        });
-      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientPage]);
 
   useEffect(() => {
     if (getFetchResponse) {
+      firstLoad && setFirstLoad(false);
       if (nowRoute === "reserve") {
-        firstLoad && setFirstLoad(false);
         onTodayDataChange({
           detect: false,
           date: `${date.currYear} ${date.currMonth + 1} ${date.currDate}`,
@@ -309,6 +296,7 @@ const Calender: React.FC<CalendarProps> = ({
           type: "BOOKING_CLICK",
           payload: {
             data: bookingStore.thisMonth,
+            firstLoad: firstLoad,
           },
         });
       }
@@ -387,6 +375,7 @@ const Calender: React.FC<CalendarProps> = ({
               >
                 {item.day}
                 {/* <div className={styles.hasBooking}></div> */}
+                {/* {item.clicked && <div className={styles.clicked}></div>} */}
               </li>
             );
           })}

@@ -81,3 +81,92 @@
   height: 50px;
   width: 100%;
 }
+
+.booksBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 50px;
+}
+
+.book {
+  width: 100%;
+  margin-top: 15px;
+  padding: 8px 10px;
+  font-weight: 300;
+  background-color: #867055;
+  color: #ffffff;
+  border-radius: 8px;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  position: relative;
+}
+
+.book div {
+  margin-top: 1px;
+}
+
+.smallTxt {
+  color: #fff;
+  margin-left: 20px;
+  opacity: 0.6;
+}
+
+.book .state {
+  color: #ffdd56;
+  font-size: 13px;
+  opacity: 1;
+  position: relative;
+  padding: 2px;
+  left: -2px;
+  position: relative;
+  left: -1px;
+  font-weight: 400;
+}
+
+.book .state.finish {
+  color: #6aff6c;
+}
+
+.book .state.bird {
+  color: #ff8e8c;
+}
+
+.book .state.click {
+  outline: 1px solid #235785;
+}
+
+.stateWrapper {
+  display: inline;
+  position: absolute;
+  left: 50px;
+  width: 47px;
+}
+
+.stateBlock {
+  /* border: 1px solid #000; */
+  background-color: #235785;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  right: 2px;
+  top: -2px;
+}
+
+.option {
+  color: #fff;
+  text-shadow: none;
+  font-weight: normal;
+}
+
+.wait {
+  background-image: url("../../assets/waitroll.gif");
+  background-size: cover;
+  background-position: center;
+  width: 17px;
+  height: 17px;
+  position: absolute;
+  left: 100px;
+}

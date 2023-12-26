@@ -62,12 +62,21 @@ const ReserveSectionBooking = () => {
     };
     const addReserve: BookingData = {
       titles: reserveItems.map((item) => item.title),
-      time: GetServiceTimeSpend(getSpentTime()),
-      cost: getReserveCosts().toString(),
-      hourIndex: reserveTime.clock,
-      wholeHour: Math.ceil(getSpentTime() / 60),
+      detail: {
+        time: GetServiceTimeSpend(getSpentTime()),
+        cost: getReserveCosts().toString(),
+        state: 0,
+      },
+      hour: {
+        index: reserveTime.clock,
+        whole: Math.ceil(getSpentTime() / 60),
+      },
       yymm: reserveTime.date[0] + "-" + reserveTime.date[1],
       date: reserveTime.date[2],
+      user: {
+        name: reserveUser.name,
+        phone: reserveUser.phone,
+      },
     };
 
     try {

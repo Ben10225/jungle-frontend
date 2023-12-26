@@ -85,6 +85,17 @@
   background-color: #9f5c38;
 }
 
+/* .days li .clicked {
+  width: 50px;
+  height: 50px;
+  border: 3px solid #9f5c38;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+} */
+
 .hasBooking {
   background-color: red;
   width: 6px;

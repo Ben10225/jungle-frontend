@@ -17,14 +17,6 @@ interface ResAvailable {
   };
 }
 
-// interface ResBookings {
-//   bookings: {
-//     thisMonth: BookingData[];
-//     nextMonth: BookingData[];
-//     theMonthAfterNext: BookingData[];
-//   };
-// }
-
 interface ResAdminData {
   workTime: {
     thisMonth: WorkTimeData[];
@@ -51,6 +43,8 @@ const AdminCalPage: React.FC = () => {
   const dispatch = useDispatch();
   const nowRoute = "admin";
   const [page, setPage] = useState(0);
+  const [allSelect, setAllSelect] = useState(0);
+  const [allCancel, setAllCancel] = useState(0);
   const [updateBtnClick, setUpdateBtnClick] = useState(false);
   const [getFetchResponse, setGetFetchResponse] = useState(false);
   const [mode, setMode] = useState<string>("BOOKS");
@@ -141,6 +135,14 @@ const AdminCalPage: React.FC = () => {
     if (mode === "BOOKS") return;
     setUpdateBtnClick(true);
     setTimeout(() => setUpdateBtnClick(false));
+  };
+
+  const handleAllSelect = () => {
+    setAllSelect((prev) => prev + 1);
+  };
+
+  const handleAllCancel = () => {
+    setAllCancel((prev) => prev + 1);
   };
 
   useEffect(() => {
@@ -270,14 +272,26 @@ const AdminCalPage: React.FC = () => {
               nowRoute={nowRoute}
               page={page}
               mode={mode}
+              allSelect={allSelect}
+              allCancel={allCancel}
             />
             {mode === "SHIFTS" && (
               <div className={styles.adminBtns}>
                 <div className={`${styles.adminBtnSmall} ${styles.many}`}>
                   多選
                 </div>
-                <div className={styles.adminBtnSmall}>全選</div>
-                <div className={styles.adminBtnSmall}>全消</div>
+                <div
+                  className={styles.adminBtnSmall}
+                  onClick={() => handleAllSelect()}
+                >
+                  全選
+                </div>
+                <div
+                  className={styles.adminBtnSmall}
+                  onClick={() => handleAllCancel()}
+                >
+                  全消
+                </div>
                 <div
                   className={styles.submitBtn}
                   onClick={() => handleUpdateArrangeData()}

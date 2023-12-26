@@ -34,11 +34,20 @@ export interface WorkTimeData {
 export interface BookingData {
   yymm: string;
   date: string;
-  cost: string;
-  time: string;
-  hourIndex: number;
-  wholeHour: number;
+  detail: {
+    cost: string;
+    time: string;
+    state: number;
+  };
+  hour: {
+    index: number;
+    whole: number;
+  };
   titles: string[];
+  user: {
+    name: string;
+    phone: string;
+  };
 }
 [];
 
@@ -67,7 +76,7 @@ interface ReserveClickAction {
 
 interface BookingClickAction {
   type: "BOOKING_CLICK";
-  payload: { data: BookingData[] };
+  payload: { data: BookingData[]; firstLoad: boolean };
 }
 
 interface AdminShowReservedAction {
@@ -251,14 +260,23 @@ export const reducer = (state: daysElementState, action: Action) => {
       tmp.forEach((item) => {
         if (item.day === 1) pass = true;
         if (!pass) return;
+        item.clicked = false;
         item.active = false;
         for (let i = 0; i < action.payload.data.length; i++) {
           if (item.day.toString() === action.payload.data[i].date) {
             item.active = true;
+            if (item.isToday) {
+              item.clicked = true;
+            }
             break;
           }
         }
       });
+      if (!action.payload.firstLoad) {
+        tmp.forEach((item) => {
+          item.clicked = false;
+        });
+      }
       return {
         ...state,
         days: tmp,

@@ -6,8 +6,8 @@ interface timeBlockData {
   workTime: number[];
   today: string[];
   mode: {
-    showReserved: boolean;
-    arrange: boolean;
+    books: boolean;
+    shifts: boolean;
   };
   origin: WorkTimeData[];
   storage: WorkTimeData[];
@@ -21,12 +21,19 @@ interface UpdateDateAction {
   payload: { index: number; newValue: number };
 }
 
-interface SetDataAcrion {
+interface SetDataAction {
   type: "SET_DATA";
   payload: {
     data: WorkTimeData[];
     nowRoute: string;
     bookingWholeHour: number;
+  };
+}
+
+interface UpdateDataAllAction {
+  type: "UPDATE_DATA_ALL";
+  payload: {
+    add: boolean;
   };
 }
 
@@ -56,7 +63,8 @@ interface UploadResetDataAction {
 
 type Action =
   | UpdateDateAction
-  | SetDataAcrion
+  | UpdateDataAllAction
+  | SetDataAction
   | CleanTableAction
   | SetTodayAction
   | SaveOriginAction
@@ -165,6 +173,91 @@ export const timeBlockReducer = (state: timeBlockData, action: Action) => {
         createData: tmpCreate,
       };
     }
+    case "UPDATE_DATA_ALL":
+      if (state.mode.shifts) {
+        const tmp = _.cloneDeep(state.storage);
+        const newTimeTable: number[] = [];
+        tmp.forEach((item) => {
+          if (
+            item.yymm === state.today[0] + "-" + state.today[1] &&
+            item.date === state.today[2]
+          ) {
+            for (let i = 0; i < item.workTime.length; i++) {
+              if (action.payload.add && item.workTime[i] === work.off) {
+                item.workTime[i] = work.on;
+              }
+              if (!action.payload.add && item.workTime[i] === work.on) {
+                item.workTime[i] = work.off;
+              }
+              newTimeTable.push(item.workTime[i]);
+            }
+          }
+        });
+
+        // add to UpdateData
+        if (newTimeTable.length > 0) {
+          const tmpUpdate: WorkTimeData[] = _.cloneDeep(state.updateData);
+          const newData: WorkTimeData = {
+            yymm: state.today[0] + "-" + state.today[1],
+            date: state.today[2],
+            workTime: newTimeTable,
+          };
+          const existsUpdateData = checkDataExist([newData], state.updateData);
+
+          // update date repeat
+          if (existsUpdateData) {
+            const r = changeRepeatValue(newData, state.updateData);
+            return {
+              ...state,
+              workTime: newTimeTable,
+              storage: [...tmp],
+              updateData: r,
+            };
+          }
+
+          // update date no repeat
+          tmpUpdate.push(newData);
+          return {
+            ...state,
+            workTime: newTimeTable,
+            storage: [...tmp],
+            updateData: tmpUpdate,
+          };
+        }
+        // data not exists before
+        const newData: WorkTimeData = {
+          yymm: state.today[0] + "-" + state.today[1],
+          date: state.today[2],
+          workTime: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        };
+        tmp.push(newData);
+
+        // add to CreateData
+        const tmpCreate: WorkTimeData[] = _.cloneDeep(state.createData);
+        const existsCreateData = checkDataExist([newData], state.createData);
+
+        // create date repeat
+        if (existsCreateData) {
+          const r = changeRepeatValue(newData, state.createData);
+          return {
+            ...state,
+            workTime: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            storage: [...tmp],
+            createData: r,
+          };
+        }
+
+        tmpCreate.push(newData);
+        return {
+          ...state,
+          workTime: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+          storage: [...tmp],
+          createData: tmpCreate,
+        };
+      }
+      return {
+        ...state,
+      };
     case "SET_DATA": {
       // reserve
       if (action.payload.nowRoute === "reserve") {
@@ -239,8 +332,8 @@ export const timeBlockReducer = (state: timeBlockData, action: Action) => {
           tmp.push(item);
         });
 
-        // make sure storage data set at first showReserved state
-        if (state.mode.showReserved) {
+        // make sure storage data set at first books state
+        if (state.mode.books) {
           return {
             ...state,
             workTime: [],
@@ -248,7 +341,7 @@ export const timeBlockReducer = (state: timeBlockData, action: Action) => {
           };
         }
 
-        // mode == ARRANGE
+        // mode == shifts
         return {
           ...state,
           workTime: matchingItem
@@ -319,10 +412,10 @@ export const timeBlockReducer = (state: timeBlockData, action: Action) => {
       const m =
         action.payload.str === "BOOKS"
           ? {
-              showReserved: true,
-              arrange: false,
+              books: true,
+              shifts: false,
             }
-          : { showReserved: false, arrange: true };
+          : { books: false, shifts: true };
       return {
         ...state,
         mode: m,
@@ -345,8 +438,8 @@ export const timeBlockInit: timeBlockData = {
   workTime: [],
   today: [],
   mode: {
-    showReserved: true,
-    arrange: false,
+    books: true,
+    shifts: false,
   },
   origin: [],
   storage: [],
@@ -358,7 +451,6 @@ const checkDataExist = (action: WorkTimeData[], state: WorkTimeData[]) => {
   let originHasAddBefore = false;
   action.forEach((dt) => {
     for (let i = 0; i < state.length; i++) {
-      // console.log(dt, state[i]);
       if (dt.yymm === state[i].yymm && dt.date === state[i].date) {
         originHasAddBefore = true;
         break;
