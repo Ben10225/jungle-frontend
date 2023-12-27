@@ -88,7 +88,9 @@ const ReserveSectionBooking = () => {
         }
       );
 
-      console.log(response.data.result);
+      if (response.data.result === "ok") {
+        location.reload();
+      }
     } catch (error) {
       console.log(error);
     } finally {

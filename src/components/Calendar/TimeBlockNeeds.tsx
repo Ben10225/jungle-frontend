@@ -37,6 +37,11 @@ interface UpdateDataAllAction {
   };
 }
 
+interface UpdateItemManyModeAction {
+  type: "UPDATE_ITEM_MANY_MODE";
+  payload: { index: number; newValue: number };
+}
+
 interface CleanTableAction {
   type: "CLEAN_TABLE";
   payload: { str: string };
@@ -61,6 +66,18 @@ interface UploadResetDataAction {
   type: "UPLOAD_RESET_DATA";
 }
 
+interface ManySubmitUpdateStorageAndOriginAction {
+  type: "MANY_SUBMIT_UPDATE_STATE";
+  payload: {
+    create: WorkTimeData[];
+    update: WorkTimeData[];
+  };
+}
+
+interface StartManyModeAction {
+  type: "Many_MODE_ON";
+}
+
 type Action =
   | UpdateDateAction
   | UpdateDataAllAction
@@ -69,7 +86,10 @@ type Action =
   | SetTodayAction
   | SaveOriginAction
   | ChangeModeAction
-  | UploadResetDataAction;
+  | UploadResetDataAction
+  | StartManyModeAction
+  | UpdateItemManyModeAction
+  | ManySubmitUpdateStorageAndOriginAction;
 
 export const timeBlockReducer = (state: timeBlockData, action: Action) => {
   switch (action.type) {
@@ -258,6 +278,24 @@ export const timeBlockReducer = (state: timeBlockData, action: Action) => {
       return {
         ...state,
       };
+    case "UPDATE_ITEM_MANY_MODE": {
+      if (state.mode.shifts) {
+        const tmp = state.workTime.map((num, i) => {
+          if (i === action.payload.index) {
+            return action.payload.newValue === work.off ? work.on : work.off;
+          }
+          return num;
+        });
+        return {
+          ...state,
+          workTime: tmp,
+        };
+      }
+
+      return {
+        ...state,
+      };
+    }
     case "SET_DATA": {
       // reserve
       if (action.payload.nowRoute === "reserve") {
@@ -427,6 +465,32 @@ export const timeBlockReducer = (state: timeBlockData, action: Action) => {
         origin: _.cloneDeep(state.storage),
         createData: [],
         updateData: [],
+      };
+    }
+    case "MANY_SUBMIT_UPDATE_STATE": {
+      const tmp = _.cloneDeep(state.storage);
+      action.payload.create.forEach((item) => {
+        tmp.push(item);
+      });
+
+      action.payload.update.forEach((item) => {
+        for (let i = 0; i < tmp.length; i++) {
+          if (tmp[i].yymm === item.yymm && tmp[i].date === item.date) {
+            tmp[i].workTime = item.workTime;
+          }
+        }
+      });
+
+      return {
+        ...state,
+        origin: tmp,
+        storage: tmp,
+      };
+    }
+    case "Many_MODE_ON": {
+      return {
+        ...state,
+        workTime: [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
       };
     }
     default:

@@ -1,3 +1,5 @@
+import axios from "axios";
+import { ENDPOINT } from "../../App";
 import { ReactElement, useState, useEffect, useReducer } from "react";
 import { WorkTimeData } from "./CalenderNeeds";
 import { work, CLickEvents } from "../Constant";
@@ -6,8 +8,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleRight } from "@fortawesome/free-solid-svg-icons";
 import styles from "./TimeBlock.module.css";
 import _ from "lodash";
-import { useDispatch } from "react-redux";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../state/store.ts";
 import { setPart, setReserveTime } from "../state/reserve/reserveSlice";
 import {
@@ -16,8 +17,12 @@ import {
   setBookNewState,
   setWait,
 } from "../state/booking/bookingSlice.ts";
-import axios from "axios";
-import { ENDPOINT } from "../../App";
+import {
+  setManyOn,
+  setManyModeOriginData,
+  setGetCreateAndUpdateData,
+  submitReset,
+} from "../state/many/manySlice.ts";
 
 interface TimeBlockProps {
   clickEvents: CLickEvents;
@@ -56,17 +61,23 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
   ).reduce((acc, curr) => (acc += curr.time), 0);
 
   const bookingStore = useSelector((state: RootState) => state.booking);
+  const manyStore = useSelector((state: RootState) => state.many);
 
   const handleArrangePeriodClick = (newValue: number, index: number) => {
     if (newValue === 0) return;
 
-    timeBlockDispatch({
-      type: "UPDATE_ITEM",
-      payload: { index: index, newValue: newValue },
-    });
-
-    const arr: number[] = [...timeBlockState.workTime];
-    arr[index] === work.on ? (arr[index] = work.off) : (arr[index] = work.on);
+    // default mode
+    if (manyStore.manyOn) {
+      timeBlockDispatch({
+        type: "UPDATE_ITEM_MANY_MODE",
+        payload: { index: index, newValue: newValue },
+      });
+    } else {
+      timeBlockDispatch({
+        type: "UPDATE_ITEM",
+        payload: { index: index, newValue: newValue },
+      });
+    }
   };
 
   const getTodayString = (data: string) => {
@@ -98,11 +109,20 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
         type: "CLEAN_TABLE",
         payload: { str: "TODAY" },
       });
+      // add this month data to manyStore
+      dispatch(
+        setManyModeOriginData({
+          page: page,
+          timeTable: fetchWorkTimeDatas,
+        })
+      );
     } else if (mode === "BOOKS") {
       timeBlockDispatch({
         type: "CLEAN_TABLE",
         payload: { str: "TODAY&WORKTABLE" },
       });
+
+      dispatch(clearBooks());
     }
   };
 
@@ -197,11 +217,17 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
     if (nowRoute === "admin") {
       if (timeBlockState.mode.books) {
         const now = clickEvents.date.split(" ");
+        const data =
+          page === 0
+            ? bookingStore.thisMonth
+            : page === 1
+            ? bookingStore.nextMonth
+            : bookingStore.theMonthAfterNext;
         dispatch(
           setNowDateBooks({
             yymm: now[0] + "-" + now[1],
             date: now[2],
-            data: bookingStore.thisMonth,
+            data: data,
           })
         );
       }
@@ -300,32 +326,40 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
   }, [getFetchResponse]);
 
   useEffect(() => {
-    if (nowRoute === "admin" && mode === "SHIFTS") {
-      timeBlockDispatch({
-        type: "SET_DATA",
-        payload: {
-          data: fetchWorkTimeDatas,
-          nowRoute: nowRoute,
-          bookingWholeHour: Math.ceil(reserveItemsWholeTime / 60),
-        },
-      });
+    dispatch(
+      setManyModeOriginData({
+        page: page,
+        timeTable: fetchWorkTimeDatas,
+      })
+    );
+    if (!manyStore.manyOn) {
+      if (nowRoute === "admin" && mode === "SHIFTS") {
+        timeBlockDispatch({
+          type: "SET_DATA",
+          payload: {
+            data: fetchWorkTimeDatas,
+            nowRoute: nowRoute,
+            bookingWholeHour: Math.ceil(reserveItemsWholeTime / 60),
+          },
+        });
 
+        timeBlockDispatch({
+          type: "SAVE_ORIGIN",
+          payload: {
+            data: fetchWorkTimeDatas,
+          },
+        });
+      }
+
+      if (nowRoute === "admin" && mode === "BOOKS") {
+        dispatch(clearBooks());
+      }
       timeBlockDispatch({
-        type: "SAVE_ORIGIN",
-        payload: {
-          data: fetchWorkTimeDatas,
-        },
+        type: "CLEAN_TABLE",
+        payload: { str: "TODAY&WORKTABLE" },
       });
     }
 
-    if (nowRoute === "admin" && mode === "BOOKS") {
-      dispatch(clearBooks());
-    }
-
-    timeBlockDispatch({
-      type: "CLEAN_TABLE",
-      payload: { str: "TODAY&WORKTABLE" },
-    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
@@ -343,6 +377,17 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
 
   useEffect(() => {
     if (updateBtnClick) {
+      if (manyStore.manyOn) {
+        const tmpWorkTime = _.cloneDeep(timeBlockState.workTime);
+
+        // update
+        dispatch(
+          setGetCreateAndUpdateData({
+            newWorkTime: tmpWorkTime,
+          })
+        );
+        return;
+      }
       // compare origin and storage
       if (!_.isEqual(timeBlockState.origin, timeBlockState.storage)) {
         onUpdateWorkTime(timeBlockState.createData, timeBlockState.updateData);
@@ -353,6 +398,45 @@ const TimeBlock: React.FC<TimeBlockProps> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updateBtnClick]);
+
+  useEffect(() => {
+    if (manyStore.createData.length > 0 || manyStore.updateData.length > 0) {
+      onUpdateWorkTime(manyStore.createData, manyStore.updateData);
+      timeBlockDispatch({
+        type: "MANY_SUBMIT_UPDATE_STATE",
+        payload: {
+          create: manyStore.createData,
+          update: manyStore.updateData,
+        },
+      });
+      dispatch(submitReset());
+      dispatch(
+        setManyOn({
+          b: false,
+        })
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [manyStore.createData, manyStore.updateData]);
+
+  useEffect(() => {
+    if (manyStore.manyOn && mode === "SHIFTS") {
+      timeBlockDispatch({
+        type: "Many_MODE_ON",
+      });
+      timeBlockDispatch({
+        type: "CLEAN_TABLE",
+        payload: { str: "TODAY" },
+      });
+    }
+    if (!manyStore.manyOn && mode === "SHIFTS") {
+      timeBlockDispatch({
+        type: "CLEAN_TABLE",
+        payload: { str: "TODAY&WORKTABLE" },
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [manyStore.manyOn]);
 
   return (
     <div className="flex justify-center flex-col items-center">

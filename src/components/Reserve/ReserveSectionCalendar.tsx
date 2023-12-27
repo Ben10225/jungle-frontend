@@ -112,6 +112,8 @@ const ReserveSectionCalendar: React.FC = () => {
             nowRoute={nowRoute}
             page={page}
             mode={""}
+            allSelect={0}
+            allCancel={0}
           />
         </div>
       </div>

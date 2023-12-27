@@ -30,6 +30,9 @@
   color: rgb(255, 213, 0);
   font-weight: 300;
 }
+.adminBtns {
+  position: relative;
+}
 
 .submitBtn {
   margin: 10px;
@@ -40,7 +43,88 @@
   color: #a21212;
   font-weight: 500;
   letter-spacing: 0.05em;
+  position: relative;
 }
+
 .many {
-  opacity: 0.3;
+  opacity: 0.2;
+  background-color: #32639f;
+  color: #fff;
+}
+
+.many.clicked {
+  opacity: 1;
+}
+
+.fade {
+  opacity: 0.2;
+}
+
+.manySelectAlert {
+  position: absolute;
+  width: 70%;
+  background-color: #545454;
+  color: #fff;
+  padding: 20px;
+  top: -208px;
+  border-radius: 10px;
+}
+
+.manySelectAlert p {
+  font-size: 14px;
+  color: #fff;
+  font-weight: 300;
+  margin-bottom: 10px;
+  z-index: 10;
+  position: relative;
+  left: 12px;
+}
+
+.manySelectAlert span.symbol {
+  position: absolute;
+  left: 14px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 300;
+}
+
+.strong {
+  color: #fff385;
+  font-size: 14px;
+  font-weight: 300;
+  font-weight: normal;
+}
+
+.alertBtns {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  font-weight: lighter;
+}
+
+.alertBtns button {
+  margin: 0 15px;
+  border: 1px solid #fff;
+  padding: 5px;
+  border-radius: 5px;
+}
+
+.waitBlock {
+  position: absolute;
+  left: 10px;
+  top: 0;
+  background-color: #f2d8bf;
+  width: 70px;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.waitGif {
+  width: 30px;
+  height: 30px;
+  background-image: url("../../assets/waitdoubleroll.gif");
+  background-position: center;
+  background-size: cover;
 }

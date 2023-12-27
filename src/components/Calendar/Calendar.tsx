@@ -3,7 +3,7 @@ import { reducer, WorkTimeData, months } from "./CalenderNeeds";
 import { CLickEvents, work } from "../Constant";
 import PrevNextBtn from "./PrevNextBtn";
 import styles from "./Calendar.module.css";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../state/store.ts";
 import {
   dayElement,
@@ -11,6 +11,7 @@ import {
   clickDay,
   dateObject,
 } from "./CalenderNeeds";
+import { setSelectDate } from "../state/many/manySlice.ts";
 
 interface CalendarProps {
   onTodayDataChange: (data: CLickEvents) => void;
@@ -30,7 +31,7 @@ const Calender: React.FC<CalendarProps> = ({
   getFetchResponse,
 }) => {
   let clickDetect: boolean = false;
-
+  const dispatch = useDispatch();
   const [firstLoad, setFirstLoad] = useState<boolean>(true);
   const [clientPage, setClientPage] = useState<number>(0);
   const [nowDate, setNowDate] = useState<Date>(new Date());
@@ -46,6 +47,7 @@ const Calender: React.FC<CalendarProps> = ({
   ).reduce((acc, curr) => (acc += curr.time), 0);
 
   const bookingStore = useSelector((state: RootState) => state.booking);
+  const manyStore = useSelector((state: RootState) => state.many);
 
   const initialState: daysElementState = {
     days: [
@@ -54,11 +56,12 @@ const Calender: React.FC<CalendarProps> = ({
         active: false,
         isToday: false,
         clicked: true,
+        selected: false,
       },
     ],
   };
 
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [calState, calDispatch] = useReducer(reducer, initialState);
 
   const [daysElement, setDaysElement] = useState<daysElementState>({
     days: [],
@@ -91,13 +94,14 @@ const Calender: React.FC<CalendarProps> = ({
       0
     ).getDate();
 
-    const tmp = [];
+    const tmp: dayElement[] = [];
     for (let i = firstDateOfMonth; i > 0; i--) {
       tmp.push({
         day: lastDateOfLastMonth - i + 1,
         active: false,
         isToday: false,
         clicked: false,
+        selected: false,
       });
     }
 
@@ -109,7 +113,13 @@ const Calender: React.FC<CalendarProps> = ({
         (i === new Date().getDate() &&
           date.currMonth === -1 &&
           nowDate.getFullYear() === new Date().getFullYear())
-          ? { day: i, active: true, isToday: true, clicked: true }
+          ? {
+              day: i,
+              active: true,
+              isToday: true,
+              clicked: true,
+              selected: false,
+            }
           : nowDate.getFullYear() < new Date().getFullYear() ||
             (nowDate.getFullYear() === new Date().getFullYear() &&
               date.currMonth < new Date().getMonth() &&
@@ -121,8 +131,20 @@ const Calender: React.FC<CalendarProps> = ({
               (date.currMonth === new Date().getMonth() ||
                 date.currMonth === -1) &&
               i < new Date().getDate())
-          ? { day: i, active: false, isToday: false, clicked: false }
-          : { day: i, active: true, isToday: false, clicked: false };
+          ? {
+              day: i,
+              active: false,
+              isToday: false,
+              clicked: false,
+              selected: false,
+            }
+          : {
+              day: i,
+              active: true,
+              isToday: false,
+              clicked: false,
+              selected: false,
+            };
       tmp.push(isToday);
     }
 
@@ -152,22 +174,46 @@ const Calender: React.FC<CalendarProps> = ({
 
     setDaysElement({ days: tmp });
 
-    dispatch({
+    calDispatch({
       type: "SET_DATE_DATA",
       payload: { days: tmp },
     });
 
-    if (!firstLoad) dispatch({ type: "CLEAR_CLICK" });
+    if (!firstLoad) calDispatch({ type: "CLEAR_CLICK" });
   };
 
   const handleClick = (index: number, item: dayElement) => {
     if (!item.active) return;
+
+    // many mode click
+    if (manyStore.manyOn) {
+      const arr =
+        clientPage === 0
+          ? manyStore.thisMonth.selectDate
+          : clientPage === 1
+          ? manyStore.nextMonth.selectDate
+          : manyStore.theMonthAfterNext.selectDate;
+
+      const selected = checkExistManySelect(arr, item.day);
+      dispatch(
+        setSelectDate({
+          page: clientPage,
+          date: item.day,
+          selected: selected,
+        })
+      );
+      calDispatch({
+        type: "UPDATE_DATE_MANY_MODE_CLICK",
+        payload: { index: index, selected: selected },
+      });
+      return;
+    }
     const str: string = `${date.currYear} ${date.currMonth + 1} ${item.day}`;
 
     // prevent repeat click same day
     if (str === clickTmp && nowRoute === "reserve") return;
 
-    dispatch({
+    calDispatch({
       type: "UPDATE_DATE_CLICK",
       payload: { index: index, nowRoute: nowRoute },
     });
@@ -219,7 +265,7 @@ const Calender: React.FC<CalendarProps> = ({
           : clientPage === 1
           ? bookingStore.nextMonth
           : bookingStore.theMonthAfterNext;
-      dispatch({
+      calDispatch({
         type: "BOOKING_CLICK",
         payload: {
           data: data,
@@ -229,9 +275,46 @@ const Calender: React.FC<CalendarProps> = ({
     }
     if (mode === "SHIFTS") {
       renderCalendar();
-      dispatch({ type: "CLEAR_ALL_CLICK" });
+      if (!manyStore.manyOn) {
+        calDispatch({ type: "CLEAR_ALL_CLICK" });
+      } else {
+        const arr =
+          clientPage === 0
+            ? manyStore.thisMonth.selectDate
+            : clientPage === 1
+            ? manyStore.nextMonth.selectDate
+            : manyStore.theMonthAfterNext.selectDate;
+        calDispatch({
+          type: "SHOW_MANY_MODE_SELECT",
+          payload: {
+            selectedArray: arr,
+          },
+        });
+      }
     }
   };
+
+  useEffect(() => {
+    if (manyStore.manyOn && mode === "SHIFTS") {
+      calDispatch({
+        type: "MANY_MODE_SELECT_RESET_CAL",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [manyStore.manyOn]);
+
+  useEffect(() => {
+    if (
+      manyStore.createData.length === 0 &&
+      manyStore.updateData.length === 0 &&
+      mode === "SHIFTS"
+    ) {
+      calDispatch({
+        type: "MANY_MODE_SELECT_RESET_CAL",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [manyStore.createData, manyStore.updateData]);
 
   useEffect(() => {
     setDate({
@@ -245,7 +328,7 @@ const Calender: React.FC<CalendarProps> = ({
     if (nowRoute === "reserve") {
       renderCalendar();
       setClickTmp("");
-      dispatch({
+      calDispatch({
         type: "RESERVE_CLICK",
         payload: {
           data: fetchWorkTimeDatas,
@@ -267,7 +350,7 @@ const Calender: React.FC<CalendarProps> = ({
           detect: false,
           date: `${date.currYear} ${date.currMonth + 1} ${date.currDate}`,
         });
-        dispatch({
+        calDispatch({
           type: "RESERVE_CLICK",
           payload: {
             data: fetchWorkTimeDatas,
@@ -292,7 +375,7 @@ const Calender: React.FC<CalendarProps> = ({
         }
       }
       if (nowRoute === "admin") {
-        dispatch({
+        calDispatch({
           type: "BOOKING_CLICK",
           payload: {
             data: bookingStore.thisMonth,
@@ -342,7 +425,7 @@ const Calender: React.FC<CalendarProps> = ({
       {/* reserve */}
       {nowRoute === "reserve" && (
         <ul className={styles.days}>
-          {state.days.map((item, index) => {
+          {calState.days.map((item, index) => {
             return (
               <li
                 className={`${styles.day} ${
@@ -362,7 +445,7 @@ const Calender: React.FC<CalendarProps> = ({
       {/* admin */}
       {nowRoute === "admin" && (
         <ul className={styles.days}>
-          {state.days.map((item, index) => {
+          {calState.days.map((item, index) => {
             return (
               <li
                 className={`${styles.day} ${
@@ -375,7 +458,9 @@ const Calender: React.FC<CalendarProps> = ({
               >
                 {item.day}
                 {/* <div className={styles.hasBooking}></div> */}
-                {/* {item.clicked && <div className={styles.clicked}></div>} */}
+                {item.selected && mode === "SHIFTS" && manyStore.manyOn && (
+                  <div className={styles.manySelect}></div>
+                )}
               </li>
             );
           })}
@@ -386,3 +471,7 @@ const Calender: React.FC<CalendarProps> = ({
 };
 
 export default Calender;
+
+const checkExistManySelect = (arr: number[], value: number): boolean => {
+  return arr.includes(value);
+};

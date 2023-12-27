@@ -6,8 +6,14 @@ import { ENDPOINT } from "../../App";
 import { WorkTimeData, BookingData } from "../Calendar/CalenderNeeds";
 import { CLickEvents, getMonthUrlQuery } from "../Constant";
 import styles from "./AdminCalPage.module.css";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../state/store.ts";
 import { setBookingData } from "../state/booking/bookingSlice";
+import {
+  setManyOn,
+  setAlertShow,
+  resetSelectDate,
+} from "../state/many/manySlice";
 
 interface ResAvailable {
   result: {
@@ -47,8 +53,10 @@ const AdminCalPage: React.FC = () => {
   const [allCancel, setAllCancel] = useState(0);
   const [updateBtnClick, setUpdateBtnClick] = useState(false);
   const [getFetchResponse, setGetFetchResponse] = useState(false);
+  const [waitGif, setWaitGif] = useState(false);
   const [mode, setMode] = useState<string>("BOOKS");
-  // const [mode, setMode] = useState<string>("SHIFTS");
+  const manyStore = useSelector((state: RootState) => state.many);
+
   const [dataFromCalendar, setDataFromCalendar] = useState<CLickEvents>({
     detect: false,
     date: "",
@@ -103,7 +111,8 @@ const AdminCalPage: React.FC = () => {
     createData: WorkTimeData[],
     updateData: WorkTimeData[]
   ) => {
-    console.log(createData, updateData);
+    console.log("create:", createData);
+    console.log("update:", updateData);
 
     setUpdateWorkTime({
       create: createData,
@@ -126,6 +135,13 @@ const AdminCalPage: React.FC = () => {
     if (clickBtnMode === mode) return;
     if (clickBtnMode === "BOOKS") {
       setMode("BOOKS");
+      if (manyStore.manyOn) {
+        dispatch(
+          setManyOn({
+            b: false,
+          })
+        );
+      }
     } else {
       setMode("SHIFTS");
     }
@@ -133,6 +149,7 @@ const AdminCalPage: React.FC = () => {
 
   const handleUpdateArrangeData = () => {
     if (mode === "BOOKS") return;
+
     setUpdateBtnClick(true);
     setTimeout(() => setUpdateBtnClick(false));
   };
@@ -143,6 +160,41 @@ const AdminCalPage: React.FC = () => {
 
   const handleAllCancel = () => {
     setAllCancel((prev) => prev + 1);
+  };
+
+  const handleSelectMany = () => {
+    if (manyStore.manyOn) {
+      dispatch(
+        setAlertShow({
+          b: true,
+        })
+      );
+    } else {
+      dispatch(
+        setManyOn({
+          b: true,
+        })
+      );
+    }
+  };
+
+  const handleAlert = (bool: boolean) => {
+    if (bool) {
+      // keep many mode
+    } else {
+      // back to origin state
+      dispatch(
+        setManyOn({
+          b: false,
+        })
+      );
+      dispatch(resetSelectDate());
+    }
+    dispatch(
+      setAlertShow({
+        b: false,
+      })
+    );
   };
 
   useEffect(() => {
@@ -209,6 +261,7 @@ const AdminCalPage: React.FC = () => {
 
   useEffect(() => {
     if (updateWorkTime.create.length > 0 || updateWorkTime.update.length > 0) {
+      setWaitGif(true);
       const postData = async () => {
         try {
           const response = await axios.post<ResPostData>(
@@ -224,6 +277,10 @@ const AdminCalPage: React.FC = () => {
               create: [],
               update: [],
             });
+
+            setTimeout(() => {
+              setWaitGif(false);
+            }, 500);
           }
         } catch (error) {
           console.log(error);
@@ -277,17 +334,50 @@ const AdminCalPage: React.FC = () => {
             />
             {mode === "SHIFTS" && (
               <div className={styles.adminBtns}>
-                <div className={`${styles.adminBtnSmall} ${styles.many}`}>
+                {manyStore.alertShow && (
+                  <div className={styles.manySelectAlert}>
+                    <span className={styles.symbol}>※</span>
+                    <p>
+                      需要上傳多選資料請先點擊
+                      <span className={styles.strong}>繼續選擇</span>
+                      按鈕，然後再點擊
+                      <span className={styles.strong}>班表上傳</span>按鈕
+                    </p>
+                    <span className={styles.symbol}>※</span>
+                    <p>
+                      需要取消剛剛全選的所有狀態，請點擊
+                      <span className={styles.strong}>確定取消</span>按鈕
+                    </p>
+                    <div className={styles.alertBtns}>
+                      <button onClick={() => handleAlert(true)}>
+                        繼續選擇
+                      </button>
+                      <button onClick={() => handleAlert(false)}>
+                        確定取消
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <div
+                  className={`${styles.adminBtnSmall} ${styles.many} ${
+                    manyStore.manyOn ? styles.clicked : ""
+                  }`}
+                  onClick={() => handleSelectMany()}
+                >
                   多選
                 </div>
                 <div
-                  className={styles.adminBtnSmall}
+                  className={`${styles.adminBtnSmall} ${
+                    manyStore.manyOn ? styles.fade : ""
+                  }`}
                   onClick={() => handleAllSelect()}
                 >
                   全選
                 </div>
                 <div
-                  className={styles.adminBtnSmall}
+                  className={`${styles.adminBtnSmall} ${
+                    manyStore.manyOn ? styles.fade : ""
+                  }`}
                   onClick={() => handleAllCancel()}
                 >
                   全消
@@ -297,6 +387,11 @@ const AdminCalPage: React.FC = () => {
                   onClick={() => handleUpdateArrangeData()}
                 >
                   班表上傳
+                  {waitGif && (
+                    <div className={styles.waitBlock}>
+                      <div className={styles.waitGif}></div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

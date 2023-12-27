@@ -6,6 +6,7 @@ export interface dayElement {
   active: boolean;
   isToday: boolean;
   clicked: boolean;
+  selected: boolean;
 }
 
 export interface daysElementState {
@@ -56,6 +57,11 @@ interface UpdateDateAction {
   payload: { index: number; nowRoute: string };
 }
 
+interface UpdateDateManyModeAction {
+  type: "UPDATE_DATE_MANY_MODE_CLICK";
+  payload: { index: number; selected: boolean };
+}
+
 interface SetDataAction {
   type: "SET_DATE_DATA";
   payload: { days: dayElement[] };
@@ -83,14 +89,26 @@ interface AdminShowReservedAction {
   type: "ADMIN_SHOWRESERVED";
 }
 
+interface ShowManyModeSelectAction {
+  type: "SHOW_MANY_MODE_SELECT";
+  payload: { selectedArray: number[] };
+}
+
+interface ManyModeCalShowResetAction {
+  type: "MANY_MODE_SELECT_RESET_CAL";
+}
+
 export type Action =
   | UpdateDateAction
+  | UpdateDateManyModeAction
   | SetDataAction
   | ClearClickAcyion
   | ClearALLClickAcyion
   | ReserveClickAction
   | BookingClickAction
-  | AdminShowReservedAction;
+  | AdminShowReservedAction
+  | ManyModeCalShowResetAction
+  | ShowManyModeSelectAction;
 
 export const reducer = (state: daysElementState, action: Action) => {
   switch (action.type) {
@@ -108,6 +126,21 @@ export const reducer = (state: daysElementState, action: Action) => {
           return item;
         }),
       };
+    case "UPDATE_DATE_MANY_MODE_CLICK": {
+      return {
+        ...state,
+        days: state.days.map((item, i) => {
+          if (action.payload.index === i) {
+            if (action.payload.selected) {
+              item.selected = false;
+            } else {
+              item.selected = true;
+            }
+          }
+          return item;
+        }),
+      };
+    }
     case "SET_DATE_DATA": {
       return {
         ...state,
@@ -282,6 +315,33 @@ export const reducer = (state: daysElementState, action: Action) => {
         days: tmp,
       };
     }
+    case "SHOW_MANY_MODE_SELECT": {
+      let pass: boolean = true;
+      return {
+        ...state,
+        days: state.days.map((item) => {
+          if (item.day === 1) pass = false;
+          if (pass) {
+            return item;
+          }
+          if (action.payload.selectedArray.includes(item.day)) {
+            item.selected = true;
+            return item;
+          }
+          return item;
+        }),
+      };
+    }
+    case "MANY_MODE_SELECT_RESET_CAL": {
+      return {
+        ...state,
+        days: state.days.map((item) => {
+          item.selected = false;
+          item.clicked = false;
+          return item;
+        }),
+      };
+    }
     case "ADMIN_SHOWRESERVED": {
       let pass: boolean = true;
       return {
@@ -296,7 +356,6 @@ export const reducer = (state: daysElementState, action: Action) => {
         }),
       };
     }
-
     default:
       return state;
   }
